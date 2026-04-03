@@ -1,0 +1,74 @@
+<!--
+Local: http://127.0.0.1:8080/main.js
+Production: https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist/main.js
+Tagged release: https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@v1.0.0/dist/main.js
+-->
+
+<!-- CSS (extracted in both dev and prod) -->
+<link
+  rel="stylesheet"
+  href="http://127.0.0.1:8080/styles.css"
+  onerror="
+    var l = document.createElement('link')
+    l.rel = 'stylesheet'
+    l.href =
+      'https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@v1.0.0/dist/styles.css'
+    document.head.appendChild(l)
+  "
+/>
+
+<script
+  src="http://127.0.0.1:8080/main.js"
+  defer
+  type="module"
+  onerror="
+    console.warn('Local JS main failed, loading fallback...')
+    var s = document.createElement('script')
+    s.src =
+      'https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@v1.0.0/dist/main.js'
+    s.type = 'module'
+    s.defer = true
+    document.head.appendChild(s)
+  "
+></script>
+
+<!--
+Webflow Snippet Usage Guide
+
+Purpose:
+This snippet loads local assets during development and falls back to the CDN
+if the local server is unavailable. For production, replace it with a simple
+script tag pointing directly to the CDN.
+
+Setup Instructions:
+
+1. Integration into Webflow:
+   - Copy everything above this comment block.
+   - Paste it into Webflow → Project Settings → Custom Code → Head section.
+   - Replace "your-repo" in the fallback URL with your actual repository name.
+
+2. Local Development:
+   - Keep the URLs pointing to http://127.0.0.1:8080/.
+   - Both the <link> and <script> tags have `onerror` fallbacks that load
+     the CDN version if the local server is off, so the live site keeps
+     working while you develop.
+
+3. Production Deployment:
+   - Replace the entire snippet above with simple, direct tags:
+
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@v1.0.0/dist/styles.css">
+     <script src="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@v1.0.0/dist/main.js" defer type="module"></script>
+
+   - No onerror fallback is needed in production since you're loading
+     directly from the CDN.
+   - Use a tagged version (@v1.0.0) for instant cache invalidation.
+     Using @main works but is cached aggressively by jsDelivr.
+
+4. Per-Page Scripts:
+   - For per-page bundles (src/pages/), add additional script tags:
+     <script src="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@v1.0.0/dist/pricing.js" defer type="module"></script>
+
+5. Versioning:
+   - Use the dashboard (npm start → Tag Version → Push + Tags) to create
+     tagged releases. See README.md for details.
+-->
