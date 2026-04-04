@@ -13,4 +13,16 @@
 // All three scaffold the file and add an entry here automatically.
 // --------------------------------------------------
 
-export default []
+export default [
+  {
+    selector: "[data-component='home']",
+    importFn: () => import('./components/home.js'),
+  },
+  {
+    selector: "[data-component='map']",
+    importFn: () => import('./components/map.js'),
+  },
+  {
+    selector: "[data-component='noise-effect']",
+    importFn: () => import('./components/noise-effect.js'),
+  },]

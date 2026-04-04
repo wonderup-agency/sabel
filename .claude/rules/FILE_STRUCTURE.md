@@ -6,7 +6,10 @@
 │   ├── components.js              Component registry (auto-managed by create-component)
 │   ├── config.js                  Shared project config (API keys, endpoints, flags)
 │   ├── components/
-│   │   └── global.js              Runs on every page before components load
+│   │   ├── global.js              Runs on every page before components load
+│   │   ├── home.js                Home page animations (nav, infinity, lines)
+│   │   ├── map.js                 SVG world map with animated glow points
+│   │   └── noise-effect.js        Multicolor noise texture overlay (Figma-style)
 │   └── pages/
 │       └── .gitkeep               Per-page standalone bundles go here
 │

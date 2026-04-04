@@ -20,6 +20,7 @@ A Webflow project with code-splitting for custom JavaScript. Components are load
 - Read relevant files before answering or planning
 - Never speculate about code you haven't opened
 - Give grounded, hallucination-free answers based on actual codebase
+- **Always use the context7 MCP server** to look up library/framework documentation before implementing. This applies to any library, SDK, or API — even well-known ones like GSAP, Rollup, PostCSS, etc. Your training data may be outdated.
 
 ### 2. Ask Permission Before:
 
