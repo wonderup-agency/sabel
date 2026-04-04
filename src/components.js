@@ -25,4 +25,5 @@ export default [
   {
     selector: "[data-component='noise-effect']",
     importFn: () => import('./components/noise-effect.js'),
-  },]
+  },
+]

@@ -100,7 +100,9 @@ export default function () {
   if (nav) {
     gsap.set(nav, { opacity: 0, filter: 'blur(12px)', yPercent: -100 })
 
-    const sloganSection = document.querySelector('[home-animation="section-slogan"]')
+    const sloganSection = document.querySelector(
+      '[home-animation="section-slogan"]'
+    )
     if (sloganSection) {
       ScrollTrigger.create({
         trigger: sloganSection,
@@ -136,8 +138,16 @@ export default function () {
   const heroLogo1 = document.querySelector('[home-animation="logo-1"]')
   const heroLogo2 = document.querySelector('[home-animation="logo-2"]')
 
-  const heroInfinite = document.querySelector('.home-hero_logos-layout .home-hero_lines:not(.hide)')
-  const heroItems = [heroTitle, heroBy, heroLogo1, heroLogo2, heroInfinite].filter(Boolean)
+  const heroInfinite = document.querySelector(
+    '.home-hero_logos-layout .home-hero_lines:not(.hide)'
+  )
+  const heroItems = [
+    heroTitle,
+    heroBy,
+    heroLogo1,
+    heroLogo2,
+    heroInfinite,
+  ].filter(Boolean)
 
   if (heroItems.length) {
     gsap.set(heroItems, { opacity: 0, y: 20, filter: 'blur(12px)' })
@@ -186,13 +196,17 @@ export default function () {
       ease: 'power2.out',
     })
 
-    tl.to(cards, {
-      autoAlpha: 1,
-      y: 0,
-      duration: 0.5,
-      ease: 'power2.out',
-      stagger: 0.05,
-    }, '-=0.3')
+    tl.to(
+      cards,
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.5,
+        ease: 'power2.out',
+        stagger: 0.05,
+      },
+      '-=0.3'
+    )
   }
 
   // ---------------------------------------------------------------------------

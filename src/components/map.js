@@ -8,18 +8,18 @@ import countries from 'world-map-country-shapes'
 // Glow point locations [x, y] on 2000x1001 viewBox
 const points = [
   // North America
-  [380, 295],  // San Francisco
-  [420, 280],  // Denver
-  [470, 275],  // Chicago
-  [510, 280],  // New York
-  [440, 320],  // Dallas
-  [370, 310],  // LA
+  [380, 295], // San Francisco
+  [420, 280], // Denver
+  [470, 275], // Chicago
+  [510, 280], // New York
+  [440, 320], // Dallas
+  [370, 310], // LA
   // Europe
-  [960, 230],  // London
-  [985, 245],  // Paris
+  [960, 230], // London
+  [985, 245], // Paris
   [1010, 225], // Berlin
   [1005, 260], // Rome
-  [990, 220],  // Amsterdam
+  [990, 220], // Amsterdam
   [1005, 245], // Zurich
   [1020, 195], // Stockholm
   [1030, 240], // Vienna
@@ -39,8 +39,8 @@ const points = [
   [1680, 600], // Sydney
   [1650, 620], // Melbourne
   // South America
-  [580, 570],  // Sao Paulo
-  [550, 640],  // Buenos Aires
+  [580, 570], // Sao Paulo
+  [550, 640], // Buenos Aires
   // Africa
   [1010, 410], // Lagos
   [1080, 470], // Nairobi
@@ -116,7 +116,9 @@ export default function (elements) {
         delay: 1.5,
       })
     } else {
-      allDots.forEach((p) => { p.style.opacity = '1' })
+      allDots.forEach((p) => {
+        p.style.opacity = '1'
+      })
     }
   })
 
