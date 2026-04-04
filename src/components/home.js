@@ -12,7 +12,6 @@ export default function () {
   // ---------------------------------------------------------------------------
   const lineWidth = 1
   const globalLines = []
-
   function getCenter(el) {
     const rect = el.getBoundingClientRect()
     return {
@@ -30,10 +29,16 @@ export default function () {
       endMap[el.getAttribute('line-end')] = el
     })
 
+    // Skip lines managed by the timeline component
+    const timelineContainer = document.querySelector(
+      '[data-component="timeline"]'
+    )
+
     starts.forEach((startEl) => {
       const id = startEl.getAttribute('line-start')
       const endEl = endMap[id]
       if (!endEl) return
+      if (timelineContainer && timelineContainer.contains(endEl)) return
 
       const startPos = getCenter(startEl)
       const endPos = getCenter(endEl)
@@ -51,8 +56,23 @@ export default function () {
         overflow: hidden;
       `
 
+      // Static background track (only if line-background is set)
+      if (startEl.hasAttribute('line-background')) {
+        const bg = document.createElement('div')
+        bg.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: #94A3B8;
+        `
+        container.appendChild(bg)
+      }
+
       const line = document.createElement('div')
       line.style.cssText = `
+        position: relative;
         width: 100%;
         height: 100%;
         background: var(--base--red);
@@ -168,7 +188,7 @@ export default function () {
   const branchSection = document.querySelector('[data-animate="lines-section"]')
   if (branchSection) {
     const allPaths = branchSection.querySelectorAll('[data-line="branch"]')
-    const cards = branchSection.querySelectorAll('.featured-card_button')
+    const cards = document.querySelectorAll('.featured-card_button')
 
     // Hide paths and cards on load
     allPaths.forEach((path) => {
@@ -178,14 +198,14 @@ export default function () {
     })
     gsap.set(cards, { autoAlpha: 0, y: 20 })
 
-    // Animate when section enters viewport
+    // Animate when section enters center, reverse when scrolling back
     const tl = gsap.timeline({
       paused: true,
       scrollTrigger: {
         trigger: branchSection,
-        start: 'top 70%',
-        once: true,
+        start: 'top 30%',
         onEnter: () => tl.play(),
+        onLeaveBack: () => tl.reverse(),
       },
     })
 

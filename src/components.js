@@ -15,6 +15,18 @@
 
 export default [
   {
+    selector: "[data-component='horizontal-line']",
+    importFn: () => import('./components/horizontal-line.js'),
+  },
+  {
+    selector: "[data-component='vertical-line']",
+    importFn: () => import('./components/vertical-line.js'),
+  },
+  {
+    selector: "[data-component='timeline']",
+    importFn: () => import('./components/timeline.js'),
+  },
+  {
     selector: "[data-component='home']",
     importFn: () => import('./components/home.js'),
   },

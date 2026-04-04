@@ -9,7 +9,10 @@
 │   │   ├── global.js              Runs on every page before components load
 │   │   ├── home.js                Home page animations (nav, infinity, lines)
 │   │   ├── map.js                 SVG world map with animated glow points
-│   │   └── noise-effect.js        Multicolor noise texture overlay (Figma-style)
+│   │   ├── horizontal-line.js      Horizontal line grows center-to-sides on scroll
+│   │   ├── noise-effect.js        Multicolor noise texture overlay (Figma-style)
+│   │   ├── timeline.js            Scroll-activated timeline with lines and bullets
+│   │   └── vertical-line.js       Vertical line grows top-to-bottom on scroll
 │   └── pages/
 │       └── .gitkeep               Per-page standalone bundles go here
 │
