@@ -107,7 +107,6 @@ export default function () {
       ScrollTrigger.create({
         trigger: sloganSection,
         start: 'top center',
-        markers: true,
         onEnter() {
           gsap.to(nav, {
             opacity: 1,
