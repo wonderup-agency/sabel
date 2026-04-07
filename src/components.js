@@ -15,6 +15,14 @@
 
 export default [
   {
+    selector: "[data-component='testimonial-cards']",
+    importFn: () => import('./components/testimonial-cards.js'),
+  },
+  {
+    selector: "[data-component='logo-marquee']",
+    importFn: () => import('./components/logo-marquee.js'),
+  },
+  {
     selector: "[data-component='horizontal-line']",
     importFn: () => import('./components/horizontal-line.js'),
   },

@@ -3,11 +3,46 @@ Component: noise-effect
 Webflow attribute: data-component="noise-effect"
 */
 
-const OPACITY = 0.03
-const GRAIN_SIZE = 100
+const OPACITY = 0.4
+const TEXTURE_SIZE = 256
 
-function createNoiseSVG() {
-  return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${GRAIN_SIZE}' height='${GRAIN_SIZE}'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
+let noiseDataUrl = null
+let styleInjected = false
+
+function generateNoiseTexture() {
+  const canvas = document.createElement('canvas')
+  canvas.width = TEXTURE_SIZE
+  canvas.height = TEXTURE_SIZE
+  const ctx = canvas.getContext('2d')
+  const imageData = ctx.createImageData(TEXTURE_SIZE, TEXTURE_SIZE)
+  const data = imageData.data
+
+  for (let i = 0; i < data.length; i += 4) {
+    const v = Math.random() * 40
+    data[i] = v
+    data[i + 1] = v
+    data[i + 2] = v
+    data[i + 3] = 255
+  }
+
+  ctx.putImageData(imageData, 0, 0)
+  return canvas.toDataURL('image/png')
+}
+
+function injectKeyframes() {
+  if (styleInjected) return
+  const style = document.createElement('style')
+  style.textContent = `
+    @keyframes noise-shift {
+      0% { background-position: 0 0; }
+      25% { background-position: -${TEXTURE_SIZE}px ${TEXTURE_SIZE / 2}px; }
+      50% { background-position: ${TEXTURE_SIZE / 2}px -${TEXTURE_SIZE}px; }
+      75% { background-position: -${TEXTURE_SIZE / 2}px ${TEXTURE_SIZE / 3}px; }
+      100% { background-position: ${TEXTURE_SIZE}px 0; }
+    }
+  `
+  document.head.appendChild(style)
+  styleInjected = true
 }
 
 function applyNoise(element) {
@@ -15,16 +50,18 @@ function applyNoise(element) {
   overlay.style.cssText = `
     position: absolute;
     inset: 0;
-    opacity: ${OPACITY};
+    opacity: 0;
     pointer-events: none;
     border-radius: inherit;
-    z-index: 1;
-    background-image: ${createNoiseSVG()};
+    z-index: 99999;
+    background-image: url(${noiseDataUrl});
     background-repeat: repeat;
+    animation: noise-shift 0.3s steps(4) infinite;
+    transition: opacity 5s ease;
+    mix-blend-mode: screen;
   `
   overlay.setAttribute('data-noise-overlay', '')
 
-  // For void elements (img, etc.), add overlay as a sibling inside the parent
   const isVoid = element instanceof HTMLImageElement
   const parent = isVoid ? element.parentElement : element
 
@@ -32,8 +69,12 @@ function applyNoise(element) {
   if (position === 'static') {
     parent.style.position = 'relative'
   }
+  // parent.style.isolation = 'isolate'
 
   parent.appendChild(overlay)
+  requestAnimationFrame(() => {
+    overlay.style.opacity = OPACITY
+  })
   return { overlay, parent }
 }
 
@@ -41,10 +82,11 @@ function applyNoise(element) {
  * @param {HTMLElement[]} elements - All elements matching [data-component='noise-effect']
  */
 export default function (elements) {
-  const entries = []
+  noiseDataUrl = generateNoiseTexture()
+  injectKeyframes()
 
   elements.forEach((element) => {
-    entries.push(applyNoise(element))
+    applyNoise(element)
   })
 
   return {

@@ -126,12 +126,13 @@ export default function () {
     if (sloganSection) {
       ScrollTrigger.create({
         trigger: sloganSection,
-        start: 'top center',
+        start: 'center center',
         onEnter() {
           gsap.to(nav, {
             opacity: 1,
             filter: 'blur(0px)',
             yPercent: 0,
+            backgroundColor: 'rgba(11, 11, 12, 0.5)',
             duration: 0.8,
             ease: 'power2.out',
           })
@@ -141,6 +142,7 @@ export default function () {
             opacity: 0,
             filter: 'blur(12px)',
             yPercent: -100,
+            backgroundColor: 'rgba(11, 11, 12, 0)',
             duration: 0.5,
             ease: 'power2.in',
           })

@@ -10,7 +10,9 @@
 │   │   ├── home.js                Home page animations (nav, infinity, lines)
 │   │   ├── map.js                 SVG world map with animated glow points
 │   │   ├── horizontal-line.js      Horizontal line grows center-to-sides on scroll
-│   │   ├── noise-effect.js        Multicolor noise texture overlay (Figma-style)
+│   │   ├── logo-marquee.js        Infinite RTL scrolling logo marquee
+│   │   ├── noise-effect.js        Dark monochrome noise texture overlay
+│   │   ├── testimonial-cards.js   Animated card stack cycling testimonials
 │   │   ├── timeline.js            Scroll-activated timeline with lines and bullets
 │   │   └── vertical-line.js       Vertical line grows top-to-bottom on scroll
 │   └── pages/

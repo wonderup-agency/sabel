@@ -36,7 +36,7 @@ This renders a `#94A3B8` background line at full height that the red animated li
   1. **Global lines**: Queries all `[line-start]` and `[line-end]` elements on the page. Skips pairs where `line-end` is inside a `[data-component="timeline"]` container. For each remaining pair, creates an absolutely positioned 1px-wide div line between the vertical centers. If the start element has a `line-background` attribute, a static `#94A3B8` track is rendered behind the animated line. Uses GSAP ScrollTrigger with `scrub: true` to progressively draw each line (scaleY 0→1). Lines have a red glow (`box-shadow`).
   2. **Nav reveal**: Navbar starts hidden (opacity 0, blurred, translated up). When `[home-animation="section-slogan"]` enters viewport center, nav animates in. Reverses on scroll back.
   3. **Hero entrance**: Staggered deblur + fade-in for `.home-hero_title`, `.home-hero_text`, `[home-animation="logo-1"]`, `[home-animation="logo-2"]`, and the infinite lines element.
-  4. **Branch lines**: When `[data-animate="lines-section"]` enters viewport (top 70%), draws all SVG paths with `[data-line="branch"]` (strokeDashoffset animation, 1.2s). After lines finish, fades in `.featured-card_button` cards with stagger. Plays once.
+  4. **Branch lines**: When `[data-animate="lines-section"]` enters viewport (top 30%), draws all SVG paths with `[data-line="branch"]` (strokeDashoffset animation, 1.2s). After lines finish, fades in `.featured-card_button` cards with stagger. Plays on enter, reverses on scroll back (`onLeaveBack`).
   5. **Slogan**: `[home-animation="slogan"]` deblurs and fades in when it enters viewport (top 60%). Plays once.
 - **Resize**: Recalculates global line positions and refreshes ScrollTrigger.
 
