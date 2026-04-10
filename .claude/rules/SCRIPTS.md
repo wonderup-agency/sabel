@@ -51,8 +51,8 @@ export default function (elements) {
 1. Normalizes the name (lowercase, spaces → hyphens)
 2. Checks if the file already exists at `src/pages/<name>.js` — exits if so
 3. Reads `package.json` for the repo path and current version (used for CDN URL)
-4. Creates the page file with a comment block containing both localhost and CDN `<script>` tags for easy copy-paste into Webflow
-5. Prints both script tags to the terminal (local active, CDN commented out)
+4. Creates the page file with a comment block containing the Webflow per-page snippet
+5. Prints the snippet to the terminal ready to copy-paste into Webflow
 
 **Nested paths**: `npm run create-page -- blog/post` creates `src/pages/blog/post.js`.
 
@@ -60,22 +60,30 @@ export default function (elements) {
 
 ```js
 /*
-<!--
-Page specific bundle: name
-Local: http://127.0.0.1:8080/name.js
-Production: https://cdn.jsdelivr.net/gh/owner/repo@vX.X.X/dist/name.js
--->
-<script src="http://127.0.0.1:8080/name.js" defer type="module"></script>
+Page bundle: name
+Add to Webflow → Page Settings → Custom Code → Before </head>:
+
+<link rel="preload" as="script" href="https://cdn.jsdelivr.net/gh/owner/repo@vX.X.X/dist/name.js" crossorigin>
+<script>
+  (function () {
+    var base = window.__devBase || (localStorage.dev ? 'http://127.0.0.1:8080' : 'https://cdn.jsdelivr.net/gh/owner/repo@vX.X.X/dist')
+    var s = document.createElement('script')
+    s.src = base + '/name.js'
+    s.type = 'module'
+    s.defer = true
+    document.head.appendChild(s)
+  })()
+</script>
 */
 
 console.log('%c📄 [name] Page loaded', 'color: #a78bfa; font-weight: bold')
 ```
 
-The comment block includes:
+The snippet uses the same dev/prod switcher pattern as the main site-wide snippet:
 
-- **Page name** and reference URLs (local + production) inside an HTML comment
-- **Local script tag** — ready to copy-paste into Webflow for dev
-- Production URL is for reference only — swap the script `src` when deploying
+- **Preload**: starts fetching the CDN bundle immediately (browser discards it in dev mode — harmless)
+- **Inline switcher**: reads `window.__devBase` (set by the site-wide head snippet) or falls back to checking `localStorage.dev` directly
+- Works automatically once the site-wide snippet is in place — no per-page manual URL swapping needed
 
 ## Shared behavior
 

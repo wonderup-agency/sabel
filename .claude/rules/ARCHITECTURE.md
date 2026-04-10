@@ -47,7 +47,7 @@ An array of `{ selector, importFn }` objects. The selector uses `data-component`
 
 ### Global (`src/components/global.js`)
 
-Loaded before any components. Runs on every page regardless of data attributes. Use for analytics, global event listeners, shared setup.
+Loaded before any components. Runs on every page regardless of data attributes. Currently initializes Lenis smooth scroll and wires it to GSAP's ticker and ScrollTrigger — this must run first so all components' ScrollTrigger instances use Lenis's interpolated scroll position from the start.
 
 ### Lifecycle
 
@@ -97,7 +97,7 @@ Local dev → commit → push to GitHub → jsDelivr serves from GitHub
   → @main for development/testing (cached aggressively)
 ```
 
-The Webflow site loads assets directly from jsDelivr CDN. During local development, the snippet in `webflow-snippet.html` points to `localhost:8080` with a CDN fallback on error.
+The Webflow site loads assets directly from jsDelivr CDN. The snippet in `webflow-snippet.html` always preloads CDN assets and uses an inline script to check `localStorage.dev` — if set, localhost:8080 is loaded instead. Toggle dev mode from devtools: `localStorage.setItem('dev', '1')` / `localStorage.removeItem('dev')`.
 
 ## Dashboard (`scripts/dashboard.js`)
 

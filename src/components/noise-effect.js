@@ -3,7 +3,7 @@ Component: noise-effect
 Webflow attribute: data-component="noise-effect"
 */
 
-const OPACITY = 0.4
+const OPACITY = 0.33
 const TEXTURE_SIZE = 256
 
 let noiseDataUrl = null

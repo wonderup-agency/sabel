@@ -44,14 +44,24 @@ const cdnBase = repoPath
   ? `https://cdn.jsdelivr.net/gh/${repoPath}`
   : `https://cdn.jsdelivr.net/gh/<owner>/<repo>`
 
+const cdnDist = `${cdnBase}@v${version}/dist`
+
 // Create page file
 const template = `/*
-<!--
-Page specific bundle: ${name}
-Local: http://127.0.0.1:8080/${arg}.js
-Production: ${cdnBase}@v${version}/dist/${arg}.js
--->
-<script src="http://127.0.0.1:8080/${arg}.js" defer type="module"></script>
+Page bundle: ${name}
+Add to Webflow → Page Settings → Custom Code → Before </head>:
+
+<link rel="preload" as="script" href="${cdnDist}/${arg}.js" crossorigin>
+<script>
+  (function () {
+    var base = window.__devBase || (localStorage.dev ? 'http://127.0.0.1:8080' : '${cdnDist}')
+    var s = document.createElement('script')
+    s.src = base + '/${arg}.js'
+    s.type = 'module'
+    s.defer = true
+    document.head.appendChild(s)
+  })()
+<\/script>
 */
 
 console.log('%c📄 [${name}] Page loaded', 'color: #a78bfa; font-weight: bold')
@@ -60,14 +70,28 @@ console.log('%c📄 [${name}] Page loaded', 'color: #a78bfa; font-weight: bold')
 mkdirSync(dirname(pagePath), { recursive: true })
 writeFileSync(pagePath, template)
 
-const localTag = `<script src="http://127.0.0.1:8080/${arg}.js" defer type="module"></script>`
-const cdnTag = `<script src="${cdnBase}@v${version}/dist/${arg}.js" defer type="module"></script>`
-
 console.log()
 console.log(pc.green(`${pc.bold('✓')} Created ${pc.bold(pagePath)}`))
 console.log()
-console.log(`Add to your Webflow page:`)
+console.log(`Add to Webflow → Page Settings → Custom Code → Before </head>:`)
 console.log()
-console.log(`  ${pc.cyan(localTag)}`)
-console.log(`  ${pc.dim(`<!-- ${cdnTag} -->`)}`)
+console.log(
+  pc.cyan(
+    `  <link rel="preload" as="script" href="${cdnDist}/${arg}.js" crossorigin>`
+  )
+)
+console.log(pc.cyan(`  <script>`))
+console.log(pc.cyan(`    (function () {`))
+console.log(
+  pc.cyan(
+    `      var base = window.__devBase || (localStorage.dev ? 'http://127.0.0.1:8080' : '${cdnDist}')`
+  )
+)
+console.log(pc.cyan(`      var s = document.createElement('script')`))
+console.log(pc.cyan(`      s.src = base + '/${arg}.js'`))
+console.log(pc.cyan(`      s.type = 'module'`))
+console.log(pc.cyan(`      s.defer = true`))
+console.log(pc.cyan(`      document.head.appendChild(s)`))
+console.log(pc.cyan(`    })()`))
+console.log(pc.cyan(`  </script>`))
 console.log()

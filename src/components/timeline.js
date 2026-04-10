@@ -166,12 +166,17 @@ export default function (elements) {
         requestAnimationFrame(checkReady)
       }
 
+      if (isGridStart) {
+        lineContainer.style.display = window.innerWidth <= 991 ? 'none' : ''
+      }
+
       allLines.push({
         container: lineContainer,
         line,
         startEl,
         endEl,
         startAnchor,
+        isGridStart,
       })
     })
 
@@ -215,7 +220,16 @@ export default function (elements) {
 
   function repositionLines() {
     allLines.forEach(
-      ({ container: lineContainer, startEl, endEl, startAnchor }) => {
+      ({
+        container: lineContainer,
+        startEl,
+        endEl,
+        startAnchor,
+        isGridStart,
+      }) => {
+        if (isGridStart) {
+          lineContainer.style.display = window.innerWidth <= 991 ? 'none' : ''
+        }
         const startPos = getPos(startEl, startAnchor)
         const endPos = getPos(endEl)
         lineContainer.style.left = `${startPos.x - LINE_WIDTH / 2 + 1}px`

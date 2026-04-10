@@ -48,6 +48,6 @@
 
 ## Dependencies
 
-- **Runtime**: `picocolors` (used by scripts only, not bundled to browser), `world-map-country-shapes` (SVG path data for 211 countries, bundled to browser by the map component)
+- **Runtime**: `picocolors` (used by scripts only, not bundled to browser), `world-map-country-shapes` (SVG path data for 211 countries, bundled to browser by the map component), `lenis` (smooth scroll, bundled to browser via `global.js`)
 - **Dev**: All other deps are devDependencies (Rollup, ESLint, Prettier, blessed, etc.)
 - No frontend framework — vanilla JavaScript only
