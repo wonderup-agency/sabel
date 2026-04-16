@@ -9,9 +9,11 @@ Webflow attribute: data-component="home"
 export default function () {
   // ---------------------------------------------------------------------------
   // Global Lines — vertical lines between line-start / line-end pairs
+  // (Skips pairs whose end is inside [data-component="timeline"])
   // ---------------------------------------------------------------------------
   const lineWidth = 1
   const globalLines = []
+
   function getCenter(el) {
     const rect = el.getBoundingClientRect()
     return {
@@ -23,13 +25,11 @@ export default function () {
   function initGlobalLines() {
     const starts = document.querySelectorAll('[line-start]')
     const ends = document.querySelectorAll('[line-end]')
-
     const endMap = {}
     ends.forEach((el) => {
       endMap[el.getAttribute('line-end')] = el
     })
 
-    // Skip lines managed by the timeline component
     const timelineContainer = document.querySelector(
       '[data-component="timeline"]'
     )
@@ -56,13 +56,11 @@ export default function () {
         overflow: hidden;
       `
 
-      // Static background track (only if line-background is set)
       if (startEl.hasAttribute('line-background')) {
         const bg = document.createElement('div')
         bg.style.cssText = `
           position: absolute;
-          top: 0;
-          left: 0;
+          top: 0; left: 0;
           width: 100%;
           height: 100%;
           background: #94A3B8;
@@ -78,9 +76,7 @@ export default function () {
         background: var(--base--red);
         transform-origin: top center;
         transform: scaleY(0);
-        box-shadow: 0 0 6px 1px var(--base--red);
       `
-
       container.appendChild(line)
       document.body.appendChild(container)
 
@@ -237,7 +233,6 @@ export default function () {
         start: 'top 50%',
         end: 'bottom 30%',
         scrub: true,
-        markers: true,
         onUpdate(self) {
           branchPaths.forEach((_, i) => {
             const card = cards[i]

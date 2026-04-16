@@ -12,7 +12,7 @@ Add to any element on the home page:
 data-component="home"
 ```
 
-Then mark line endpoints anywhere in the page with matching numbers:
+Mark line endpoints anywhere in the page with matching numbers:
 
 ```html
 <div line-start="1"></div>
@@ -33,17 +33,17 @@ This renders a `#94A3B8` background line at full height that the red animated li
 ## Behavior
 
 - **Init**:
-  1. **Global lines**: Queries all `[line-start]` and `[line-end]` elements on the page. Skips pairs where `line-end` is inside a `[data-component="timeline"]` container. For each remaining pair, creates an absolutely positioned 1px-wide div line between the vertical centers. If the start element has a `line-background` attribute, a static `#94A3B8` track is rendered behind the animated line. Uses GSAP ScrollTrigger with `scrub: true` to progressively draw each line (scaleY 0→1). Lines have a red glow (`box-shadow`).
+  1. **Global lines**: Queries all `[line-start]` and `[line-end]` elements on the page. Skips pairs where `line-end` is inside a `[data-component="timeline"]` container. For each remaining pair, creates an absolutely positioned 1px-wide div line between the vertical centers. If the start element has a `line-background` attribute, a static `#94A3B8` track is rendered behind the animated line. Uses GSAP ScrollTrigger with `scrub: true` to progressively draw each line (scaleY 0→1).
   2. **Nav reveal**: Navbar starts hidden (opacity 0, blurred, translated up). When `[home-animation="section-slogan"]` enters viewport center, nav animates in. Reverses on scroll back.
   3. **Hero entrance**: Staggered deblur + fade-in for `.home-hero_title`, `.home-hero_text`, `[home-animation="logo-1"]`, `[home-animation="logo-2"]`, and the infinite lines element.
-  4. **Branch lines**: Scrub-controlled animation tied to scroll position (`top 20%` → `bottom 20%`). The main vertical line (path starting at y≈0) draws first with `ease: none` so scroll progress maps 1:1 to how far down it's drawn. All branch paths fire together the moment the main line completes (`branchStart = mainDuration`), which is exactly when it visually reaches the branch point. Branches are sorted left-to-right by their end X position (via `getPointAtLength`) and staggered so the leftmost reaches its final state first, progressing right. All 5 branch paths map 1:1 to 5 `.featured-card_button` cards that reveals (fade + y) when the line completes and hides when scroll reverses past that threshold — driven by `onUpdate` on the ScrollTrigger, not scrub, for a proper entrance/exit animation. Reverses automatically on scroll back.
+  4. **Branch lines**: Scrub-controlled animation tied to scroll position (`top 50%` → `bottom 30%`). The main vertical line (path starting at y≈0) draws first with `ease: none` so scroll progress maps 1:1 to how far down it's drawn. All branch paths fire together the moment the main line completes (`branchStart = mainDuration`), which is exactly when it visually reaches the branch point. Branches are sorted left-to-right by their end X position (via `getPointAtLength`) and staggered so the leftmost reaches its final state first, progressing right. All 5 branch paths map 1:1 to 5 `.featured-card_button` cards that reveal (fade + y) when the line completes and hide when scroll reverses past that threshold — driven by `onUpdate` on the ScrollTrigger, not scrub, for a proper entrance/exit animation. Reverses automatically on scroll back.
   5. **Slogan**: `[home-animation="slogan"]` deblurs and fades in when it enters viewport (top 60%). Plays once.
 - **Resize**: Recalculates global line positions and refreshes ScrollTrigger.
 
 ## Dependencies
 
 - **GSAP** (global): `gsap`, `ScrollTrigger` — loaded via Webflow's GSAP integration.
-- **CSS variable**: `var(--base--red)` for line color and glow.
+- **CSS variable**: `var(--base--red)` for line color.
 
 ## DOM Expectations
 

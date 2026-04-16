@@ -5,45 +5,48 @@ Webflow attribute: data-component="map"
 
 import countries from 'world-map-country-shapes'
 
-// Glow point locations [x, y] on 2000x1001 viewBox
+// Glow point locations [x, y] on 2000x1001 viewBox (Robinson projection)
 const points = [
-  // North America
-  [380, 295], // San Francisco
-  [420, 280], // Denver
-  [470, 275], // Chicago
-  [510, 280], // New York
-  [440, 320], // Dallas
-  [370, 310], // LA
-  // Europe
-  [960, 230], // London
-  [985, 245], // Paris
-  [1010, 225], // Berlin
-  [1005, 260], // Rome
-  [990, 220], // Amsterdam
-  [1005, 245], // Zurich
-  [1020, 195], // Stockholm
-  [1030, 240], // Vienna
-  // Middle East
-  [1110, 330], // Dubai
-  [1085, 310], // Saudi
-  // Asia
-  [1440, 270], // Beijing
-  [1470, 290], // Shanghai
-  [1530, 275], // Tokyo
-  [1460, 320], // Hong Kong
-  [1400, 370], // Bangkok
-  [1420, 400], // Singapore
-  [1270, 360], // Mumbai
   // Oceania
-  [1440, 420], // Jakarta
-  [1680, 600], // Sydney
-  [1650, 620], // Melbourne
-  // South America
-  [580, 570], // Sao Paulo
-  [550, 640], // Buenos Aires
+  [1782, 786], // Sydney
+  [1736, 811], // Melbourne
+  [1809, 746], // Brisbane
+  [1897, 805], // Auckland
+  [1877, 833], // Wellington
+  [1855, 847], // Christchurch
+  // Asia
+  [1651, 479], // Makati
+  [1716, 345], // Tokyo
+  [1549, 552], // Kuala Lumpur
+  [1561, 563], // Singapore
+  [1605, 430], // Hong Kong
+  [1577, 611], // Jakarta
+  [1395, 390], // New Delhi
+  [1386, 454], // Pune
+  // Middle East
+  [1279, 412], // Dubai
+  [1165, 370], // Israel
+  // Europe
+  [1074, 255], // Krakow
+  [976, 246], // London
+  [946, 235], // Dublin
+  [1000, 241], // Amsterdam
+  [1058, 200], // Stockholm
+  [1035, 221], // Copenhagen
+  [988, 262], // Paris
+  [1047, 255], // Prague
+  [1013, 275], // Bern
+  [969, 242], // Warwick
+  [983, 249], // Dover
   // Africa
-  [1010, 410], // Lagos
-  [1080, 470], // Nairobi
+  [1144, 761], // Durban
+  // South America
+  [700, 760], // Novo Hamburgo
+  // North America
+  [367, 265], // Victoria BC
+  [593, 313], // New York
+  [334, 332], // San Francisco
+  [526, 306], // Chicago
 ]
 
 /**
@@ -55,7 +58,7 @@ export default function (elements) {
   elements.forEach((el) => {
     const svg = document.createElementNS(svgNS, 'svg')
     svg.setAttribute('viewBox', '0 0 2000 1001')
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid slice')
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
     svg.style.cssText = 'width:100%;height:100%;display:block;'
 
     // Glow filter
