@@ -45,7 +45,7 @@ window.addEventListener('resize', () => {
     if (typeof hooks.resize === 'function') hooks.resize()
   })
 })
-;(async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   try {
     const module = await import('./components/global.js')
     if (typeof module.default === 'function') {
@@ -68,4 +68,4 @@ window.addEventListener('resize', () => {
     )
   }
   await Promise.all(components.map(loadComponent))
-})()
+})

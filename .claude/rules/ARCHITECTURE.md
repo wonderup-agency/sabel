@@ -15,14 +15,15 @@ These never mix. Browser code is bundled by Rollup into `dist/`. Tooling runs in
 Webflow page loads
   → <script src="main.js" type="module" defer>
     → main.js imports components.js (the registry)
-    → main.js dynamically imports global.js
-      → global.js default function runs (site-wide setup)
-    → main.js iterates the registry:
-      → For each component, checks if selector exists on the page
-      → If yes: dynamically imports the component module
-      → Calls the default function with matching elements
-      → Stores returned lifecycle hooks (resize)
-    → Window resize event fires hooks on all active components
+    → main.js waits for DOMContentLoaded (ensures GSAP globals exist)
+      → dynamically imports global.js
+        → global.js default function runs (site-wide setup)
+      → iterates the registry:
+        → For each component, checks if selector exists on the page
+        → If yes: dynamically imports the component module
+        → Calls the default function with matching elements
+        → Stores returned lifecycle hooks (resize)
+      → Window resize event fires hooks on all active components
 ```
 
 Key design decisions:
