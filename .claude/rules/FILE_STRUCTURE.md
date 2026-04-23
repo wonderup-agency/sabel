@@ -7,12 +7,17 @@
 │   ├── config.js                  Shared project config (API keys, endpoints, flags)
 │   ├── components/
 │   │   ├── global.js              Runs on every page before components load
+│   │   ├── hero.js                Hero section line-track animation
 │   │   ├── home.js                Home page animations (nav, infinity, lines)
 │   │   ├── map.js                 SVG world map with animated glow points
+│   │   ├── navbar.js              Navbar reveal animation (deblur + slide down)
 │   │   ├── horizontal-line.js      Horizontal line grows center-to-sides on scroll
 │   │   ├── logo-marquee.js        Infinite RTL scrolling logo marquee
 │   │   ├── noise-effect.js        Dark monochrome noise texture overlay
 │   │   ├── testimonial-cards.js   Animated card stack cycling testimonials
+│   │   ├── scroll-tabs.js          Scroll-activated sticky tabs with progress and crossfade
+│   │   ├── services-timeline.js    Services page timeline with SVG stroke draw and bridges
+│   │   ├── steps-timeline.js      Steps section with segmented lines and card glow
 │   │   ├── timeline.js            Scroll-activated timeline with lines and bullets
 │   │   └── vertical-line.js       Vertical line grows top-to-bottom on scroll
 │   └── pages/

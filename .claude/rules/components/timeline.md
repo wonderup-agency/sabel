@@ -50,7 +50,7 @@ No `.line_start` / `.line_end` markers are needed — the previous attribute-bas
   7. **Bullet activation** — each bridge's `onUpdate` watches scrub progress: when it crosses `PROGRESS_THRESHOLD = 0.98`, the END bullet animates to active state (`filter: grayscale(0) brightness(1)` + `.featured-card_nav_icon-blur` opacity 1). Reverses below threshold.
   8. **Per-tick repositioning** — `gsap.ticker.add(repositionAll)` runs every frame. Each bridge and trail container's `top`, `left`, and `height` are recalculated from `getBoundingClientRect()`. This keeps lines connected to dots through all sticky/flow/transition states without precomputed page coords.
   9. **Parallax background**: if a `[data-timeline="bg"]` element exists inside the container, applies a scrubbed `fromTo` tween tied to the container's scroll range (`top bottom` → `bottom top`). Starts at `yPercent: -100` and ends at `yPercent: 0`. Sets `xPercent: -50` to preserve CSS horizontal centering.
-  10. **Scroll-to links**: finds all `[data-scroll-to]` elements on the page, sets each `href` to `#<value>`, and adds a click handler that smooth-scrolls to the target element by ID.
+  10. **Scroll-to links**: finds all `[data-scroll-to]` elements on the page, sets each `href` to `#<value>`, and adds a click handler that calls `scrollIntoView({ behavior: 'smooth' })` on the target element.
 - **Resize**: Recomputes each trail's `naturalCenterY` (via the wrapper-based helper), repositions all lines, and calls `ScrollTrigger.refresh()` to recompute scrub ranges.
 
 ## Dependencies

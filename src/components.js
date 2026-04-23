@@ -15,6 +15,26 @@
 
 export default [
   {
+    selector: "[data-component='navbar']",
+    importFn: () => import('./components/navbar.js'),
+  },
+  {
+    selector: "[data-component='scroll-tabs']",
+    importFn: () => import('./components/scroll-tabs.js'),
+  },
+  {
+    selector: "[data-component='hero']",
+    importFn: () => import('./components/hero.js'),
+  },
+  {
+    selector: "[data-component='steps-timeline']",
+    importFn: () => import('./components/steps-timeline.js'),
+  },
+  {
+    selector: "[data-component='services-timeline']",
+    importFn: () => import('./components/services-timeline.js'),
+  },
+  {
     selector: "[data-component='testimonial-cards']",
     importFn: () => import('./components/testimonial-cards.js'),
   },

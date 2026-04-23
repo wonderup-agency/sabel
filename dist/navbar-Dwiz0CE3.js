@@ -1,0 +1,1 @@
+function e(e){const t=e[0];t&&(document.querySelector('[data-component="home"]')||(gsap.set(t,{opacity:0,filter:"blur(12px)",yPercent:-100}),gsap.to(t,{opacity:1,filter:"blur(0px)",yPercent:0,backgroundColor:"rgba(11, 11, 12, 0.5)",duration:.8,ease:"power2.out",delay:.3})))}export{e as default};
