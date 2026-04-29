@@ -6,6 +6,7 @@
 │   ├── components.js              Component registry (auto-managed by create-component)
 │   ├── config.js                  Shared project config (API keys, endpoints, flags)
 │   ├── components/
+│   │   ├── fin-branch-lines.js    Fin page variant of homepage branch-lines (per-instance)
 │   │   ├── global.js              Runs on every page before components load
 │   │   ├── hero.js                Hero section line-track animation
 │   │   ├── home.js                Home page animations (nav, infinity, lines)

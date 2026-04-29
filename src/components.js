@@ -15,6 +15,10 @@
 
 export default [
   {
+    selector: "[data-component='fin-branch-lines']",
+    importFn: () => import('./components/fin-branch-lines.js'),
+  },
+  {
     selector: "[data-component='impact']",
     importFn: () => import('./components/impact.js'),
   },
