@@ -15,6 +15,14 @@
 
 export default [
   {
+    selector: "[data-component='impact']",
+    importFn: () => import('./components/impact.js'),
+  },
+  {
+    selector: "[data-component='intercom-timeline']",
+    importFn: () => import('./components/intercom-timeline.js'),
+  },
+  {
     selector: "[data-component='navbar']",
     importFn: () => import('./components/navbar.js'),
   },

@@ -9,6 +9,8 @@
 │   │   ├── global.js              Runs on every page before components load
 │   │   ├── hero.js                Hero section line-track animation
 │   │   ├── home.js                Home page animations (nav, infinity, lines)
+│   │   ├── impact.js              Impact section top/bottom line-track scroll-draw
+│   │   ├── intercom-timeline.js   Intercom Foundations timeline (SVG draw + dot bridges)
 │   │   ├── map.js                 SVG world map with animated glow points
 │   │   ├── navbar.js              Navbar reveal animation (deblur + slide down)
 │   │   ├── horizontal-line.js      Horizontal line grows center-to-sides on scroll
