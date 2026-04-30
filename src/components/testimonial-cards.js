@@ -8,7 +8,7 @@ Webflow attribute: data-component="testimonial-cards"
  */
 export default function (elements) {
   const VISIBLE_COUNT = 3
-  const CYCLE_DURATION = 5
+  const CYCLE_DURATION = 3.5
   const SCALE_STEP = 0.1
   const X_STEP = 40
   const EXIT_SCALE = 1.05
@@ -20,16 +20,6 @@ export default function (elements) {
       wrapper.querySelectorAll('.testimonials_card-item')
     )
     if (cards.length < 2) return
-
-    cards.forEach((card) => {
-      const positionEl = card.querySelector('[data-custom="client-position"]')
-      const nameEl = card.querySelector('[data-custom="client-name"]')
-      if (positionEl && nameEl) {
-        positionEl.textContent =
-          positionEl.textContent + ', ' + nameEl.textContent
-        nameEl.remove()
-      }
-    })
 
     let order = cards.map((_, i) => i)
 

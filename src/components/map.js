@@ -124,8 +124,4 @@ export default function (elements) {
       })
     }
   })
-
-  return {
-    resize() {},
-  }
 }

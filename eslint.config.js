@@ -18,6 +18,7 @@ export default [
         setInterval: 'readonly',
         clearInterval: 'readonly',
         IntersectionObserver: 'readonly',
+        ResizeObserver: 'readonly',
         gsap: 'readonly',
         ScrollTrigger: 'readonly',
       },

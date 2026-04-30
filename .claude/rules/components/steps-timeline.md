@@ -20,11 +20,21 @@ Inside the section, mark each card with:
 
 Each card should contain a `.steps-checkboxes_item-icon-wrapper` with two stacked `.steps-checkboxes_item-icon` images using `grid-area: 1 / 1`. The **second image is the OFF state** (visible by default due to DOM order). The **first image is the ON state** (hidden behind the second).
 
+### Optional: customize the start offset
+
+The first segment extends above the first card by a default of 200px on desktop (32px on screens ≤767px). Override the desktop value per-section by adding `data-start-offset` (pixels) to the section:
+
+```html
+<section data-component="steps-timeline" data-start-offset="120">...</section>
+```
+
+If `data-start-offset` is missing or non-numeric, it falls back to 200. The mobile value (32px) is fixed.
+
 ## Behavior
 
 - **Init**:
   1. **Line segments**: Creates N absolutely positioned 1px-wide red line divs on `document.body` (one per card):
-     - **Segment 0**: From above the first card's top edge (200px on desktop, 32px on screens ≤767px) down to the first card's top edge.
+     - **Segment 0**: From above the first card's top edge (default 200px on desktop, overridable via `data-start-offset` on the section; 32px on screens ≤767px) down to the first card's top edge.
      - **Segments 1–N-1**: From card[i-1]'s bottom edge to card[i]'s top edge (the gap between cards).
      - X position: 40px to the right of the cards' left edge.
      - Each segment draws via `scaleY 0→1` with GSAP ScrollTrigger `scrub: true`. Fully reversible on scroll back.
@@ -34,7 +44,7 @@ Each card should contain a `.steps-checkboxes_item-icon-wrapper` with two stacke
      - Shadow stays on the current card while the line draws through the gap — only transfers when the line touches the next card's top.
      - Last card keeps its shadow after the final segment completes.
      - On scroll reversal: shadow transfers back when the line retracts from a card's top (progress drops below 0.98).
-  3. **Icon toggle**: When the line reaches a card's top, the second `.steps-checkboxes_item-icon` (OFF state) fades out (0.3s) to reveal the first image (ON state). Icons **accumulate** — multiple cards can show the ON state simultaneously. Icons revert to OFF when the line retracts from that card's top (same threshold as shadow: progress drops below 0.98).
+  3. **Icon toggle**: At init, the ON icon (`icons[0]`) is set to `opacity: 0` and the OFF icon (`icons[1]`) is set to `opacity: 1` — so exactly one icon is visible at any moment, regardless of whether the icons themselves have transparency. When the line reaches a card's top, the two icons crossfade inversely (`icons[1]` → 0 and `icons[0]` → 1, both 0.3s) so visible "icon weight" stays at ~1 throughout the transition. Icons **accumulate** — multiple cards can show the ON state simultaneously. Icons revert to OFF when the line retracts from that card's top (same threshold as shadow: progress drops below 0.98).
   4. **Per-tick repositioning**: `gsap.ticker.add(repositionAll)` recalculates every line segment's `top`, `left`, and `height` from `getBoundingClientRect()` each frame.
 - **Resize**: Repositions all line segments and calls `ScrollTrigger.refresh()`.
 
@@ -45,7 +55,7 @@ Each card should contain a `.steps-checkboxes_item-icon-wrapper` with two stacke
 
 ## DOM Expectations
 
-- One element matching `[data-component='steps-timeline']` (the section container).
+- One element matching `[data-component='steps-timeline']` (the section container). Optional `data-start-offset` attribute on the section overrides the desktop start offset (default 200px).
 - Any number of `[data-steps-timeline="item"]` children (`.steps-checkboxes_item` cards) inside a `.steps-checkboxes_list` flex container.
 - Each card contains a `.steps-checkboxes_item-icon-wrapper` with two `.steps-checkboxes_item-icon` images stacked via `grid-area: 1 / 1`. Second image = OFF state (visible by default), first image = ON state.
 - Line segments are appended to `document.body` as absolutely positioned divs with class `global-line global-line--steps`.

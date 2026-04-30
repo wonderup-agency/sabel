@@ -14,4 +14,19 @@ export default function () {
 
   // Disable GSAP lag smoothing — Lenis handles its own smoothing
   gsap.ticker.lagSmoothing(0)
+
+  // Refresh ScrollTrigger when the document grows or shrinks after init
+  // (lazy-loaded images, font swaps, deferred content). Without this,
+  // components near the bottom of long pages keep stale cached pixel
+  // positions and fire their animations against the old layout.
+  let refreshScheduled = false
+  const scheduleRefresh = () => {
+    if (refreshScheduled) return
+    refreshScheduled = true
+    requestAnimationFrame(() => {
+      refreshScheduled = false
+      ScrollTrigger.refresh()
+    })
+  }
+  new ResizeObserver(scheduleRefresh).observe(document.body)
 }

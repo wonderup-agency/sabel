@@ -47,6 +47,9 @@ For CMS collection lists, set attributes on the collection item template once �
      - **Backward**: Future tabs deactivate — dot goes grey, text returns to original color, line resets to 0. Previous panel crossfades back in.
   7. **Panel crossfade**: Active panel fades in (opacity 0→1, 0.3s). Previous panel fades out and gets `visibility: hidden` + `pointer-events: none` after the fade. In-progress tweens are killed before starting new ones to handle fast scrolling.
   8. **Click to scroll**: Each tab button has a click handler that computes the target scroll position from the ScrollTrigger's start/end range and calls `window.scrollTo({ behavior: 'smooth' })`, which Lenis intercepts for smooth scrolling. Click handler is a no-op on mobile (guarded by ScrollTrigger existence check).
+
+  Text merging like `position + name` is now handled by the standalone `concat` component — wrap the relevant fields inside any panel in `<div data-component="concat">` in Webflow.
+
 - **Resize**: Checks breakpoint on every resize. If crossing the 991px threshold:
   - **Desktop → Mobile**: Kills the ScrollTrigger, clears all GSAP inline styles (`height`, `position`, `sticky`, `opacity`, `visibility`, `filter`, `transform`, `color`) so CSS takes over mobile layout.
   - **Mobile → Desktop**: Runs full setup (height, sticky, initial states, ScrollTrigger).

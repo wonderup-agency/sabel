@@ -5,15 +5,15 @@ Webflow attribute: data-component="steps-timeline"
 
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
-const LINE_X_OFFSET = 40
-const LINE_START_OFFSET = 200
-const LINE_START_OFFSET_MOBILE = 32
+const LINE_X_OFFSET = 60
+const LINE_START_OFFSET_DEFAULT = 200
+const LINE_START_OFFSET_MOBILE = 0
 const MOBILE_BREAKPOINT = 767
 
-function getStartOffset() {
+function getStartOffset(desktop) {
   return window.innerWidth <= MOBILE_BREAKPOINT
     ? LINE_START_OFFSET_MOBILE
-    : LINE_START_OFFSET
+    : desktop
 }
 const SHADOW_BLUR = 100
 const SHADOW_COLOR = '225, 6, 0'
@@ -36,10 +36,22 @@ export default function (elements) {
     const items = [...section.querySelectorAll('[data-steps-timeline="item"]')]
     if (!items.length) return
 
+    const parsedOffset = parseFloat(section.dataset.startOffset)
+    const startOffsetDesktop = Number.isFinite(parsedOffset)
+      ? parsedOffset
+      : LINE_START_OFFSET_DEFAULT
+
     let activeShadowIndex = -1
     const iconStates = items.map(() => false)
 
-    items.forEach((item) => gsap.set(item, { filter: SHADOW_OFF }))
+    items.forEach((item) => {
+      gsap.set(item, { filter: SHADOW_OFF })
+      const icons = item.querySelectorAll('.steps-checkboxes_item-icon')
+      if (icons.length >= 2) {
+        gsap.set(icons[0], { opacity: 0 })
+        gsap.set(icons[1], { opacity: 1 })
+      }
+    })
 
     // --- Shadow ---
     function moveShadowTo(newIndex) {
@@ -69,6 +81,11 @@ export default function (elements) {
         '.steps-checkboxes_item-icon'
       )
       if (icons.length >= 2) {
+        gsap.to(icons[0], {
+          opacity: 1,
+          duration: TRANSITION_DURATION,
+          ease: 'power2.out',
+        })
         gsap.to(icons[1], {
           opacity: 0,
           duration: TRANSITION_DURATION,
@@ -84,6 +101,11 @@ export default function (elements) {
         '.steps-checkboxes_item-icon'
       )
       if (icons.length >= 2) {
+        gsap.to(icons[0], {
+          opacity: 0,
+          duration: TRANSITION_DURATION,
+          ease: 'power2.out',
+        })
         gsap.to(icons[1], {
           opacity: 1,
           duration: TRANSITION_DURATION,
@@ -129,7 +151,7 @@ export default function (elements) {
 
       if (i === 0) {
         stConfig.trigger = items[0]
-        stConfig.start = () => `top-=${getStartOffset()} 80%`
+        stConfig.start = () => `top-=${getStartOffset(startOffsetDesktop)} 80%`
         stConfig.end = 'top 60%'
       } else {
         stConfig.trigger = items[i - 1]
@@ -144,13 +166,13 @@ export default function (elements) {
         scrollTrigger: stConfig,
       })
 
-      allSegments.push({ lineEl, index: i, items })
+      allSegments.push({ lineEl, index: i, items, startOffsetDesktop })
     }
   })
 
   // --- Per-frame repositioning ---
   function repositionAll() {
-    allSegments.forEach(({ lineEl, index, items }) => {
+    allSegments.forEach(({ lineEl, index, items, startOffsetDesktop }) => {
       const firstCard = items[0]
       const xPos =
         firstCard.getBoundingClientRect().left + LINE_X_OFFSET + window.scrollX
@@ -158,7 +180,7 @@ export default function (elements) {
       let topY, bottomY
       if (index === 0) {
         const cardTop = firstCard.getBoundingClientRect().top + window.scrollY
-        topY = cardTop - getStartOffset()
+        topY = cardTop - getStartOffset(startOffsetDesktop)
         bottomY = cardTop
       } else {
         topY = items[index - 1].getBoundingClientRect().bottom + window.scrollY

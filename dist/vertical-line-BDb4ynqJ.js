@@ -1,1 +1,0 @@
-function t(t){t.forEach(t=>{gsap.set(t,{scaleY:0,transformOrigin:"top center"}),gsap.to(t,{scaleY:1,ease:"none",scrollTrigger:{trigger:t,start:"top 80%",end:"bottom 50%",scrub:!0}})})}export{t as default};

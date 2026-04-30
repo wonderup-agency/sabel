@@ -16,7 +16,7 @@ export default function (elements) {
       scrollTrigger: {
         trigger: el,
         start: 'top 80%',
-        end: 'bottom 50%',
+        end: 'bottom 20%',
         scrub: true,
       },
     })

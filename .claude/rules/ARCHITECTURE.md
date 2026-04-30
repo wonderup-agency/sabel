@@ -48,7 +48,7 @@ An array of `{ selector, importFn }` objects. The selector uses `data-component`
 
 ### Global (`src/components/global.js`)
 
-Loaded before any components. Runs on every page regardless of data attributes. Currently initializes Lenis smooth scroll and wires it to GSAP's ticker and ScrollTrigger — this must run first so all components' ScrollTrigger instances use Lenis's interpolated scroll position from the start.
+Loaded before any components. Runs on every page regardless of data attributes. Currently initializes Lenis smooth scroll and wires it to GSAP's ticker and ScrollTrigger — this must run first so all components' ScrollTrigger instances use Lenis's interpolated scroll position from the start. Also attaches a `ResizeObserver` to `document.body` that calls `ScrollTrigger.refresh()` (debounced to the next animation frame) when the page height changes after init — keeps cached scroll positions valid as lazy images and fonts settle.
 
 ### Lifecycle
 

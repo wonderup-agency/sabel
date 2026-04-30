@@ -88,8 +88,4 @@ export default function (elements) {
   elements.forEach((element) => {
     applyNoise(element)
   })
-
-  return {
-    resize() {},
-  }
 }

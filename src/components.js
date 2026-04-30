@@ -15,6 +15,14 @@
 
 export default [
   {
+    selector: "[data-component='cta']",
+    importFn: () => import('./components/cta.js'),
+  },
+  {
+    selector: "[data-component='concat']",
+    importFn: () => import('./components/concat.js'),
+  },
+  {
     selector: "[data-component='fin-branch-lines']",
     importFn: () => import('./components/fin-branch-lines.js'),
   },
