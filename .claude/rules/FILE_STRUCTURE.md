@@ -19,6 +19,10 @@
 │   │   ├── horizontal-line.js      Horizontal line grows center-to-sides on scroll
 │   │   ├── logo-marquee.js        Infinite RTL scrolling logo marquee
 │   │   ├── noise-effect.js        Dark monochrome noise texture overlay
+│   │   ├── pricing-calculator/    Self-building pricing calculator (folder component)
+│   │   │   ├── index.js           Component logic, rendering, modal, PDF lazy-load
+│   │   │   ├── config.js          Pricing data (hourly rate, FX, components, tiers)
+│   │   │   └── styles.css         Scoped styles using Webflow CSS variables
 │   │   ├── testimonial-cards.js   Animated card stack cycling testimonials
 │   │   ├── scroll-tabs.js          Scroll-activated sticky tabs with progress and crossfade
 │   │   ├── services-timeline.js    Services page timeline with SVG stroke draw and bridges

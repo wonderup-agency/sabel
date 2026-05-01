@@ -8,6 +8,11 @@ Runs on every page before any component loads. Initializes Lenis smooth scroll, 
 
 No `data-component` attribute needed. This file is always loaded by `main.js` unconditionally.
 
+## Exports
+
+- **default**: The init function (called once by `main.js`).
+- **`getLenis()`**: Named export that returns the live Lenis instance, or `null` if `global.js` has not finished initialising yet. Lets other components pause/resume Lenis when needed (e.g. the `pricing-calculator` modal calls `getLenis().stop()` on open and `getLenis().start()` on close).
+
 ## Behavior
 
 - **Init**:

@@ -50,6 +50,8 @@ An array of `{ selector, importFn }` objects. The selector uses `data-component`
 
 Loaded before any components. Runs on every page regardless of data attributes. Currently initializes Lenis smooth scroll and wires it to GSAP's ticker and ScrollTrigger — this must run first so all components' ScrollTrigger instances use Lenis's interpolated scroll position from the start. Also attaches a `ResizeObserver` to `document.body` that calls `ScrollTrigger.refresh()` (debounced to the next animation frame) when the page height changes after init — keeps cached scroll positions valid as lazy images and fonts settle.
 
+Exports a named `getLenis()` helper alongside the default init function so other components can access the live Lenis instance — used, for example, by the `pricing-calculator` modal to call `lenis.stop()` / `lenis.start()` and pause smooth-scroll while the modal is open. Returns `null` if invoked before `global.js` has finished initialising.
+
 ### Lifecycle
 
 - **Init**: The default function body (runs once on load)

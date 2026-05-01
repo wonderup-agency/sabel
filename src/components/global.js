@@ -1,8 +1,17 @@
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
 
+let lenisInstance = null
+
+// Lets other components access the live Lenis instance (e.g. to stop/start
+// scroll while a modal is open). Returns null if global.js hasn't run yet.
+export function getLenis() {
+  return lenisInstance
+}
+
 export default function () {
   const lenis = new Lenis({ autoRaf: false })
+  lenisInstance = lenis
 
   // Keep ScrollTrigger in sync with Lenis scroll position
   lenis.on('scroll', ScrollTrigger.update)

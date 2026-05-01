@@ -15,6 +15,10 @@
 
 export default [
   {
+    selector: "[data-component='pricing-calculator']",
+    importFn: () => import('./components/pricing-calculator/index.js'),
+  },
+  {
     selector: "[data-component='cta']",
     importFn: () => import('./components/cta.js'),
   },
