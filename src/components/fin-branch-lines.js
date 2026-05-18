@@ -14,6 +14,31 @@ the homepage section animated by home.js.
  */
 export default function (elements) {
   elements.forEach((section) => {
+    // CTA-style top lines animation (data-cta elements copied from cta section)
+    const topH = section.querySelector(
+      '[data-cta="line-top-horizontal"] .cta_line-fill'
+    )
+    const topV = section.querySelector(
+      '[data-cta="line-top-vertical"] .cta_line-fill'
+    )
+
+    if (topH && topV) {
+      gsap.set(topH, { scaleX: 0, scaleY: 1 })
+      gsap.set(topV, { scaleX: 1, scaleY: 0, transformOrigin: '50% 0%' })
+
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 85%',
+            end: 'top 30%',
+            scrub: 1,
+          },
+        })
+        .to(topH, { scaleX: 1, ease: 'none', duration: 1 }, 0)
+        .to(topV, { scaleY: 1, ease: 'none', duration: 1 }, 0)
+    }
+
     const svg = section.querySelector('[data-animate="lines-section"]')
     if (!svg) return
 
