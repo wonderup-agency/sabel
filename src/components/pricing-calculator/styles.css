@@ -750,7 +750,7 @@
   padding: 0 0 1.5rem;
   overflow: hidden;
   position: sticky;
-  top: 1.5rem;
+  top: 5.5rem;
 }
 @media (max-width: 61.9375rem) {
   [data-component='pricing-calculator'] .pc-price-panel {
