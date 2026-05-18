@@ -22,7 +22,7 @@ No `.line_start` / `.line_end` markers are needed — the previous attribute-bas
 
 - **Init**:
   1. Sets `position: relative; z-index: 2` on the timeline container so its content sits above body-level lines (`z-index: 1`).
-  2. Finds `.featured-card_nav_icon` bullets inside the container and sets them to inactive: `filter: grayscale(1) brightness(0.6)`, with `.featured-card_nav_icon-blur` child hidden.
+  2. Finds `.featured-card_nav_icon` bullets inside the container. Resolves `--base--grey-2` (inactive) and `--base--red` (active) from the first icon's computed style (with `#4c6280` / `#E10600` fallbacks). Sets all bullets to the inactive color via `background-color`, explicitly clears `filter` to `none` (so any leftover Webflow filter on the class doesn't carry over), and hides the `.featured-card_nav_icon-blur` child. Bullets are colored divs (typically Webflow mask-image setups) — color is applied to `background-color`, not via filter.
   3. Builds an ordered list of pairs:
      - **Grid-start pair** (optional): bottom of `.featured-cards_grid`'s first child → `icon[0]`. Hidden on viewports ≤ 991px.
      - **Icon pairs**: `icon[i]` → `icon[i+1]` for each consecutive pair.
@@ -47,7 +47,7 @@ No `.line_start` / `.line_end` markers are needed — the previous attribute-bas
      - **Grid-start bridge end**: `scrollAtSticky(icon[0])` (when `icon[0]` becomes sticky).
        Both `scrollAtSticky` and `scrollAtUnstick` derive positions from the wrapper element (never sticky itself), so they return correct values regardless of the nav's current sticky/pinned state.
        Reverses on scroll back (`scrub: true`). `invalidateOnRefresh: true` recomputes on resize.
-  7. **Bullet activation** — each bridge's `onUpdate` watches scrub progress: when it crosses `PROGRESS_THRESHOLD = 0.98`, the END bullet animates to active state (`filter: grayscale(0) brightness(1)` + `.featured-card_nav_icon-blur` opacity 1). Reverses below threshold.
+  7. **Bullet activation** — each bridge's `onUpdate` watches scrub progress: when it crosses `PROGRESS_THRESHOLD = 0.98`, the END bullet animates to active state (`background-color` tweens grey-2 → red over 0.3s + `.featured-card_nav_icon-blur` opacity 1). Reverses below threshold.
   8. **Per-tick repositioning** — `gsap.ticker.add(repositionAll)` runs every frame. Each bridge and trail container's `top`, `left`, and `height` are recalculated from `getBoundingClientRect()`. This keeps lines connected to dots through all sticky/flow/transition states without precomputed page coords.
   9. **Parallax background**: if a `[data-timeline="bg"]` element exists inside the container, applies a scrubbed `fromTo` tween tied to the container's scroll range (`top bottom` → `bottom top`). Starts at `yPercent: -100` and ends at `yPercent: 0`. Sets `xPercent: -50` to preserve CSS horizontal centering.
   10. **Scroll-to links**: finds all `[data-scroll-to]` elements on the page, sets each `href` to `#<value>`, and adds a click handler that calls `scrollIntoView({ behavior: 'smooth' })` on the target element.
@@ -56,7 +56,7 @@ No `.line_start` / `.line_end` markers are needed — the previous attribute-bas
 ## Dependencies
 
 - **GSAP** (global): `gsap`, `ScrollTrigger` — loaded via Webflow's GSAP integration.
-- **CSS variables**: `var(--base--red)` for trail and bridge red color, and bullet color; `var(--base--grey-2, #4c6280)` for the static bridge background track. The hex fallback covers cases where Webflow publishes the variable under a different name than expected — if `--base--grey-2` doesn't resolve, the BG falls back to `#4c6280` (the slate-grey value defined in Webflow Designer) instead of being transparent.
+- **CSS variables**: `var(--base--red)` for trail and bridge red color and the active bullet; `var(--base--grey-2, #4c6280)` for the inactive bullet color and the static bridge background track. Both vars are read from the bullet's computed style at init; hex fallbacks (`#E10600` / `#4c6280`) cover cases where the Webflow variable isn't defined on the cascading chain.
 - **CSS contract**: `.featured-card_nav` must have `position: sticky; top: 8rem`. The component reads this as a constant (`STICKY_TOP_PX = 8 * 16`); changing the CSS without updating the constant will misalign the trail timing.
 
 ## DOM Expectations
