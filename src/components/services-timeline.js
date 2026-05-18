@@ -5,7 +5,7 @@ Webflow attribute: data-component="services-timeline"
 
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
-const LINE_BG_COLOR = 'var(--base--grey)'
+const LINE_BG_COLOR = 'var(--base--grey-2)'
 const LINE_GAP = 16
 const PROGRESS_THRESHOLD = 0.98
 

@@ -1,5 +1,6 @@
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
+import './global.css'
 
 let lenisInstance = null
 
@@ -38,4 +39,19 @@ export default function () {
     })
   }
   new ResizeObserver(scheduleRefresh).observe(document.body)
+
+  // Toggle the .global-lines-visible class on <html> as the user scrolls
+  // past a small threshold. The matching CSS rule lives in global.css so
+  // .global-line elements start at opacity 0 from the first paint (no
+  // FOUC) regardless of when components append them to the DOM.
+  const SCROLL_THRESHOLD = 8 // px — dead zone to prevent flicker at the top
+  const updateGlobalLinesVisibility = () => {
+    document.documentElement.classList.toggle(
+      'global-lines-visible',
+      window.scrollY > SCROLL_THRESHOLD
+    )
+  }
+
+  updateGlobalLinesVisibility()
+  lenis.on('scroll', updateGlobalLinesVisibility)
 }

@@ -21,12 +21,14 @@ No `data-component` attribute needed. This file is always loaded by `main.js` un
   3. Adds `lenis.raf(time * 1000)` to `gsap.ticker` so Lenis updates on every GSAP frame.
   4. Disables `gsap.ticker.lagSmoothing` — Lenis handles its own easing; GSAP lag smoothing would cause double-smoothing artifacts.
   5. Attaches a `ResizeObserver` to `document.body` that calls `ScrollTrigger.refresh()` (debounced to the next animation frame so multiple resizes coalesce into one refresh) whenever the body's box size changes. This catches late-loading content — lazy-loaded images, font swaps, deferred CMS content — that grows or shrinks the page after init. Without this, ScrollTrigger's cached pixel positions go stale and components near the bottom of long pages fire their animations against the old layout (e.g. the cta lines completing before the section ever comes into view).
+  6. **Global-line fade**: Toggles a `global-lines-visible` class on `<html>` based on whether `window.scrollY` is above an 8px threshold (a dead zone that prevents flicker near the top). The matching CSS rule lives in `global.css` (imported from this file, extracted to `dist/styles.css`) — `.global-line` and `[data-hero='line-track']` start at `opacity: 0` and transition to `opacity: 1` over 0.6s when the class is present. Shipping the rule via CSS (not JS) guarantees that line elements created at runtime are invisible from the first paint, and that the pre-existing hero track in the Webflow HTML is also hidden before any JS runs — no FOUC.
 - **Resize**: Not used — Lenis handles viewport resize internally; the `ResizeObserver` set up at init handles document-height changes globally.
 
 ## Dependencies
 
 - **lenis** (npm): Bundled by Rollup. CSS imported from `lenis/dist/lenis.css`, extracted to `dist/styles.css`.
 - **GSAP** (global): `gsap`, `ScrollTrigger` — loaded via Webflow's GSAP integration and available as globals when this runs.
+- **`./global.css`**: Sibling CSS file imported and extracted to `dist/styles.css`. Owns the `.global-line` + `[data-hero='line-track']` fade rule. Components that append `.global-line` elements (home, timeline, services-timeline, intercom-timeline, steps-timeline) and the hero (`[data-hero='line-track']`) all participate in the fade automatically — no per-component CSS.
 
 ## DOM Expectations
 

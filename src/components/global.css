@@ -1,0 +1,22 @@
+/*
+Shared rule for .global-line elements (created at runtime by home,
+timeline, services-timeline, intercom-timeline, steps-timeline) AND
+for the hero's [data-hero="line-track"] (which lives in the Webflow
+HTML, so we target it by attribute to beat the JS-add-class race
+and stay hidden from the very first paint).
+
+Shipping this in dist/styles.css instead of injecting it via JS means
+the rule is present in the CSSOM before any JS runs, so every line
+renders invisible from frame 1 — no FOUC.
+*/
+
+.global-line,
+[data-hero='line-track'] {
+  opacity: 0;
+  transition: opacity 0.6s ease-out;
+}
+
+html.global-lines-visible .global-line,
+html.global-lines-visible [data-hero='line-track'] {
+  opacity: 1;
+}

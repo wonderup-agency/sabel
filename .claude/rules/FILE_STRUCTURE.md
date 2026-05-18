@@ -10,6 +10,7 @@
 │   │   ├── cta.js                 CTA section three-phase scroll-driven line animation
 │   │   ├── fin-branch-lines.js    Fin page variant of homepage branch-lines (per-instance)
 │   │   ├── global.js              Runs on every page before components load
+│   │   ├── global.css             Shared CSS bundled to dist/styles.css (.global-line fade rule)
 │   │   ├── hero.js                Hero section line-track animation
 │   │   ├── home.js                Home page animations (nav, infinity, lines)
 │   │   ├── impact.js              Impact section top/bottom line-track scroll-draw

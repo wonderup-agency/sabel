@@ -56,7 +56,7 @@ No `.line_start` / `.line_end` markers are needed — the previous attribute-bas
 ## Dependencies
 
 - **GSAP** (global): `gsap`, `ScrollTrigger` — loaded via Webflow's GSAP integration.
-- **CSS variables**: `var(--base--red)` for trail and bridge red color, and bullet color; `var(--base--grey)` for the static bridge background track.
+- **CSS variables**: `var(--base--red)` for trail and bridge red color, and bullet color; `var(--base--grey-2)` for the static bridge background track.
 - **CSS contract**: `.featured-card_nav` must have `position: sticky; top: 8rem`. The component reads this as a constant (`STICKY_TOP_PX = 8 * 16`); changing the CSS without updating the constant will misalign the trail timing.
 
 ## DOM Expectations
