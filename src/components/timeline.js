@@ -72,10 +72,16 @@ export default function (elements) {
     const icons = [...container.querySelectorAll('.featured-card_nav_icon')]
     if (!icons.length) return
 
+    const cs = getComputedStyle(icons[0])
+    const iconInactiveColor =
+      cs.getPropertyValue('--base--grey-2').trim() || '#4c6280'
+    const iconActiveColor =
+      cs.getPropertyValue('--base--red').trim() || '#E10600'
+
     icons.forEach((icon) => {
       const blur = icon.querySelector('.featured-card_nav_icon-blur')
       if (blur) gsap.set(blur, { opacity: 0 })
-      gsap.set(icon, { filter: 'grayscale(1) brightness(0.6)' })
+      gsap.set(icon, { filter: 'none', backgroundColor: iconInactiveColor })
     })
 
     // -----------------------------------------------------------------
@@ -175,7 +181,7 @@ export default function (elements) {
         if (isActive) return
         isActive = true
         gsap.to(bullet, {
-          filter: 'grayscale(0) brightness(1)',
+          backgroundColor: iconActiveColor,
           duration: 0.3,
           ease: 'power2.out',
         })
@@ -185,7 +191,7 @@ export default function (elements) {
         if (!isActive) return
         isActive = false
         gsap.to(bullet, {
-          filter: 'grayscale(1) brightness(0.6)',
+          backgroundColor: iconInactiveColor,
           duration: 0.3,
           ease: 'power2.out',
         })

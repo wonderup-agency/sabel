@@ -30,9 +30,15 @@ export default function (elements) {
     ]
     if (!icons.length) return
 
+    const cs = getComputedStyle(icons[0])
+    const iconInactiveColor =
+      cs.getPropertyValue('--base--grey-2').trim() || '#4c6280'
+    const iconActiveColor =
+      cs.getPropertyValue('--base--red').trim() || '#E10600'
+
     const iconStates = icons.map(() => false)
     icons.forEach((icon) => {
-      gsap.set(icon, { filter: 'grayscale(1) brightness(0.6)' })
+      gsap.set(icon, { filter: 'none', backgroundColor: iconInactiveColor })
       const blur = icon.querySelector(
         '.services_timeline_item-header-icon-blur'
       )
@@ -47,7 +53,7 @@ export default function (elements) {
         '.services_timeline_item-header-icon-blur'
       )
       gsap.to(icon, {
-        filter: 'grayscale(0) brightness(1)',
+        backgroundColor: iconActiveColor,
         duration: 0.3,
         ease: 'power2.out',
       })
@@ -62,7 +68,7 @@ export default function (elements) {
         '.services_timeline_item-header-icon-blur'
       )
       gsap.to(icon, {
-        filter: 'grayscale(1) brightness(0.6)',
+        backgroundColor: iconInactiveColor,
         duration: 0.3,
         ease: 'power2.out',
       })

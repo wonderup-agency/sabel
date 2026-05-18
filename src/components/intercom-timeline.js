@@ -31,9 +31,15 @@ export default function (elements) {
     const icons = [...el.querySelectorAll('.featured-card_nav_icon')]
     if (!icons.length) return
 
+    const cs = getComputedStyle(icons[0])
+    const iconInactiveColor =
+      cs.getPropertyValue('--base--grey-2').trim() || '#4c6280'
+    const iconActiveColor =
+      cs.getPropertyValue('--base--red').trim() || '#E10600'
+
     const iconStates = icons.map(() => false)
     icons.forEach((icon) => {
-      gsap.set(icon, { filter: 'grayscale(1) brightness(0.6)' })
+      gsap.set(icon, { filter: 'none', backgroundColor: iconInactiveColor })
       const blur = icon.querySelector('.featured-card_nav_icon-blur')
       if (blur) gsap.set(blur, { opacity: 0 })
     })
@@ -44,7 +50,7 @@ export default function (elements) {
       const icon = icons[index]
       const blur = icon.querySelector('.featured-card_nav_icon-blur')
       gsap.to(icon, {
-        filter: 'grayscale(0) brightness(1)',
+        backgroundColor: iconActiveColor,
         duration: 0.3,
         ease: 'power2.out',
       })
@@ -57,7 +63,7 @@ export default function (elements) {
       const icon = icons[index]
       const blur = icon.querySelector('.featured-card_nav_icon-blur')
       gsap.to(icon, {
-        filter: 'grayscale(1) brightness(0.6)',
+        backgroundColor: iconInactiveColor,
         duration: 0.3,
         ease: 'power2.out',
       })
