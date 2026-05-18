@@ -5,7 +5,7 @@ Webflow attribute: data-component="timeline"
 
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
-const LINE_BG_COLOR = 'var(--base--grey-2)'
+const LINE_BG_COLOR = 'var(--base--grey-2, #4c6280)'
 const LINE_GAP = 16 // px gap above/below each dot so lines don't strike through
 const STICKY_TOP_PX = 8 * 16 // matches CSS `top: 8rem` on .featured-card_nav
 const PROGRESS_THRESHOLD = 0.98

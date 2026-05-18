@@ -47,7 +47,7 @@ The cards use the standard sticky-nav structure. Each `.featured-cards_card_wrap
 ## Dependencies
 
 - **GSAP** (global): `gsap`, `ScrollTrigger` — loaded via Webflow's GSAP integration.
-- **CSS variables**: `var(--base--red)` for line/dot color, `var(--base--grey-2)` for bridge background tracks.
+- **CSS variables**: `var(--base--red)` for line/dot color, `var(--base--grey-2, #4c6280)` for bridge background tracks (hex fallback if the Webflow variable doesn't resolve under the expected name).
 
 ## DOM Expectations
 

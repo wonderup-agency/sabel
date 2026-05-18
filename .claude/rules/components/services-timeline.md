@@ -44,7 +44,7 @@ The SVG wrapper is absolutely positioned at the top of `.services_timeline_list`
 ## Dependencies
 
 - **GSAP** (global): `gsap`, `ScrollTrigger` — loaded via Webflow's GSAP integration.
-- **CSS variables**: `var(--base--red)` for line/icon color, `var(--base--grey-2)` for bridge background tracks.
+- **CSS variables**: `var(--base--red)` for line/icon color, `var(--base--grey-2, #4c6280)` for bridge background tracks (hex fallback if the Webflow variable doesn't resolve under the expected name).
 
 ## DOM Expectations
 

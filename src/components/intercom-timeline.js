@@ -5,7 +5,7 @@ Webflow attribute: data-component="intercom-timeline"
 
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
-const LINE_BG_COLOR = 'var(--base--grey-2)'
+const LINE_BG_COLOR = 'var(--base--grey-2, #4c6280)'
 const LINE_GAP = 16
 const PROGRESS_THRESHOLD = 0.98
 
