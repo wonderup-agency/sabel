@@ -21,6 +21,7 @@ export default [
         clearTimeout: 'readonly',
         IntersectionObserver: 'readonly',
         ResizeObserver: 'readonly',
+        MutationObserver: 'readonly',
         localStorage: 'readonly',
         fetch: 'readonly',
         alert: 'readonly',
