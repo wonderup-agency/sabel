@@ -69,10 +69,20 @@ export default function (elements) {
 
     function showPanel(index) {
       panels.forEach((panel, i) => {
+        const img = panel.querySelector('.scroll-tabs_panels_image')
         gsap.killTweensOf(panel)
+        if (img) gsap.killTweensOf(img)
+
         if (i === index) {
           gsap.set(panel, { visibility: 'visible', pointerEvents: 'auto' })
           gsap.to(panel, { opacity: 1, duration: CROSSFADE })
+          if (img) {
+            gsap.fromTo(
+              img,
+              { scale: 0.96, y: 8 },
+              { scale: 1, y: 0, duration: 0.45, ease: 'power2.out' }
+            )
+          }
         } else if (gsap.getProperty(panel, 'opacity') > 0) {
           gsap.to(panel, {
             opacity: 0,
@@ -166,6 +176,11 @@ export default function (elements) {
       frame.style.top = ''
 
       panels.forEach((panel) => {
+        const img = panel.querySelector('.scroll-tabs_panels_image')
+        if (img) {
+          gsap.killTweensOf(img)
+          img.style.transform = ''
+        }
         gsap.killTweensOf(panel)
         panel.style.opacity = ''
         panel.style.visibility = ''
