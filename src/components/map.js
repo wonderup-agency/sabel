@@ -74,7 +74,7 @@ export default function (elements) {
     countries.forEach(({ shape }) => {
       const path = document.createElementNS(svgNS, 'path')
       path.setAttribute('d', shape)
-      path.setAttribute('fill', '#2a0a0a')
+      path.setAttribute('fill', '#4a1414')
       svg.appendChild(path)
     })
 
