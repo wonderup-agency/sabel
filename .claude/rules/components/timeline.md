@@ -45,15 +45,6 @@ If a `.featured-cards_grid` exists inside the section (the row of `.featured-car
   9. **Scroll-to links**: finds all `[data-scroll-to]` elements on the page, sets each `href` to `#<value>`, and adds a click handler that calls `scrollIntoView({ behavior: 'smooth' })` on the target element.
 - **Resize**: Repositions all lines and calls `ScrollTrigger.refresh()` to recompute scrub ranges.
 
-## Debug markers
-
-Every ScrollTrigger in the component has `markers: true`. Color legend (also logged to the console at init):
-
-- **lime** — activation trigger (fires at `top 50%`, only `onEnter`).
-- **orange** — deactivation trigger (fires at `top 55%`, only `onLeaveBack` with `direction` guard).
-- **cyan** — bridge start (`top 40%` for inter-dot bridges, `bottom 50%` of `.featured-cards_grid` for the first bridge).
-- **magenta** — bridge end (`top 50%` — same scroll position as the next dot's activation).
-
 ## Dependencies
 
 - **GSAP** (global): `gsap`, `ScrollTrigger` — loaded via Webflow's GSAP integration.

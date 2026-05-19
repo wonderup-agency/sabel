@@ -37,24 +37,6 @@ export default function (elements) {
     const icons = [...container.querySelectorAll('.featured-card_nav_icon')]
     if (!icons.length) return
 
-    console.log(
-      `%c[timeline] init — ${icons.length} icons (.featured-card_nav_icon)`,
-      'color: cyan; font-weight: bold',
-      container
-    )
-    icons.forEach((icon, i) => {
-      const wrapper = icon.closest('.featured-card_nav-wrapper')
-      console.log(`  icon[${i}]`, icon, ` ← wrapper:`, wrapper)
-    })
-    console.log(
-      `%c[timeline] markers legend`,
-      'color: cyan; font-weight: bold',
-      '\n  • lime    → activation trigger (fires "top 50%", only onEnter)',
-      '\n  • orange  → deactivation trigger (fires "top 55%", only onLeaveBack — 5vh hysteresis below activation)',
-      '\n  • cyan    → bridge start (fires at "top 40%" — 10vh AFTER activation, so dot lights up first)',
-      '\n  • magenta → bridge end (fires at "top 50%" — same as next dot activation)'
-    )
-
     const cs = getComputedStyle(icons[0])
     const iconInactiveColor =
       cs.getPropertyValue('--base--grey-2').trim() || '#4c6280'
@@ -110,7 +92,6 @@ export default function (elements) {
         trigger: wrapper,
         start: ACTIVATE_AT,
         invalidateOnRefresh: true,
-        markers: { startColor: 'lime', endColor: 'lime', fontSize: 10 },
         onRefresh: (self) => {
           console.log(
             `%c[snap ${label} ACTIVATE] refresh — fires at scrollY=${self.start.toFixed(0)}`,
@@ -133,7 +114,6 @@ export default function (elements) {
         trigger: wrapper,
         start: DEACTIVATE_AT,
         invalidateOnRefresh: true,
-        markers: { startColor: 'orange', endColor: 'orange', fontSize: 10 },
         onRefresh: (self) => {
           console.log(
             `%c[snap ${label} DEACTIVATE] refresh — fires at scrollY=${self.start.toFixed(0)}`,
@@ -212,7 +192,6 @@ export default function (elements) {
           end: ACTIVATE_AT,
           scrub: true,
           invalidateOnRefresh: true,
-          markers: { startColor: 'cyan', endColor: 'magenta', fontSize: 10 },
           onRefresh: (self) => {
             console.log(
               `%c[bridge ${pairLabel}] refresh — start=${self.start.toFixed(0)} end=${self.end.toFixed(0)}`,
@@ -285,7 +264,6 @@ export default function (elements) {
           end: 'top 50%',
           scrub: true,
           invalidateOnRefresh: true,
-          markers: { startColor: 'cyan', endColor: 'magenta', fontSize: 10 },
           onRefresh: (self) => {
             console.log(
               `%c[bridge grid→icon[0]] refresh — start=${self.start.toFixed(0)} end=${self.end.toFixed(0)}`,
