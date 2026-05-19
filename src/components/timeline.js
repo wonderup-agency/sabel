@@ -7,26 +7,21 @@ const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
 const LINE_BG_COLOR = 'var(--base--grey-2, #4c6280)'
 const LINE_GAP = 16 // px gap above/below each dot so lines don't strike through
-const STICKY_TOP_PX = 8 * 16 // matches CSS `top: 8rem` on .featured-card_nav
-const PROGRESS_THRESHOLD = 0.98
-const MOBILE_BREAKPOINT = 991
+
+// Trigger viewport positions, expressed in ScrollTrigger string syntax.
+// Both refer to the non-sticky `.featured-card_nav-wrapper` (the wrapper's
+// TOP edge in the viewport). Because the icon sits at the top of the wrapper,
+// these effectively read as "icon top in viewport".
+const ACTIVATE_AT = 'top 50%' // dot turns on + bridge end
+const BRIDGE_START_AT = 'top 40%' // bridge begins filling 10vh AFTER activation, so the dot is clearly lit before the line starts drawing toward the next dot
+const DEACTIVATE_AT = 'top 55%' // sits 5vh BELOW activation — hysteresis zone so Lenis jitter and small refresh shifts can't flip the dot off
 
 /**
  * @param {HTMLElement[]} elements - All elements matching [data-component='timeline']
  */
 export default function (elements) {
   const allBridges = []
-  const allTrails = []
 
-  function rectPageTop(el) {
-    return el.getBoundingClientRect().top + window.scrollY
-  }
-
-  function rectPageBottom(el) {
-    return el.getBoundingClientRect().bottom + window.scrollY
-  }
-
-  // Current visual center of an icon (reflects sticky/transform state).
   function iconCenter(icon) {
     const r = icon.getBoundingClientRect()
     return {
@@ -35,42 +30,30 @@ export default function (elements) {
     }
   }
 
-  // Icon's NATURAL center page Y — where it sits in normal flow before any
-  // sticky offset. Derived from the wrapper (which is never sticky) so this
-  // is correct regardless of the current scroll position.
-  function naturalCenterY(icon) {
-    const nav = icon.closest('.featured-card_nav')
-    const wrapper = icon.closest('.featured-card_nav-wrapper')
-    if (!nav || !wrapper) return iconCenter(icon).pageY
-    const wrapperPageTop = rectPageTop(wrapper)
-    const iconRelToNav =
-      icon.getBoundingClientRect().top - nav.getBoundingClientRect().top
-    const iconHalfH = icon.getBoundingClientRect().height / 2
-    return wrapperPageTop + iconRelToNav + iconHalfH
-  }
-
-  // Scroll position at which icon's sticky nav would reach top:8rem.
-  // Uses the wrapper (not the nav rect) so it's correct even when
-  // the nav is currently in its sticky or pinned state.
-  function scrollAtSticky(icon) {
-    const wrapper = icon.closest('.featured-card_nav-wrapper')
-    if (!wrapper) return rectPageTop(icon) - STICKY_TOP_PX
-    return rectPageTop(wrapper) - STICKY_TOP_PX
-  }
-
-  function scrollAtUnstick(icon) {
-    const nav = icon.closest('.featured-card_nav')
-    const wrapper = icon.closest('.featured-card_nav-wrapper')
-    if (!nav || !wrapper) return Infinity
-    return rectPageBottom(wrapper) - STICKY_TOP_PX - nav.offsetHeight
-  }
-
   elements.forEach((container) => {
     container.style.position = 'relative'
     container.style.zIndex = '2'
 
     const icons = [...container.querySelectorAll('.featured-card_nav_icon')]
     if (!icons.length) return
+
+    console.log(
+      `%c[timeline] init — ${icons.length} icons (.featured-card_nav_icon)`,
+      'color: cyan; font-weight: bold',
+      container
+    )
+    icons.forEach((icon, i) => {
+      const wrapper = icon.closest('.featured-card_nav-wrapper')
+      console.log(`  icon[${i}]`, icon, ` ← wrapper:`, wrapper)
+    })
+    console.log(
+      `%c[timeline] markers legend`,
+      'color: cyan; font-weight: bold',
+      '\n  • lime    → activation trigger (fires "top 50%", only onEnter)',
+      '\n  • orange  → deactivation trigger (fires "top 55%", only onLeaveBack — 5vh hysteresis below activation)',
+      '\n  • cyan    → bridge start (fires at "top 40%" — 10vh AFTER activation, so dot lights up first)',
+      '\n  • magenta → bridge end (fires at "top 50%" — same as next dot activation)'
+    )
 
     const cs = getComputedStyle(icons[0])
     const iconInactiveColor =
@@ -85,62 +68,108 @@ export default function (elements) {
     })
 
     // -----------------------------------------------------------------
-    // TRAILS — one per icon, red only, no scrub. Height is driven by
-    // the gap between the icon's natural page position and its current
-    // (sticky-shifted) position. Grows while sticky, stays after unstick.
+    // Snap activation — dot turns red the moment its wrapper top reaches
+    // 50% of the viewport. Reverses on scroll back.
     // -----------------------------------------------------------------
-    icons.forEach((icon) => {
-      const initNaturalY = naturalCenterY(icon)
+    icons.forEach((icon, i) => {
+      const wrapper = icon.closest('.featured-card_nav-wrapper')
+      if (!wrapper) return
+      const blur = icon.querySelector('.featured-card_nav_icon-blur')
+      const label = `icon[${i}]`
+      let isActive = false
 
-      const trailContainer = document.createElement('div')
-      trailContainer.className = 'global-line global-line--trail'
-      trailContainer.style.cssText = `
-        position: absolute;
-        width: ${LINE_WIDTH}px;
-        pointer-events: none;
-        z-index: 1;
-        display: none;
-      `
+      const activate = () => {
+        if (isActive) return
+        isActive = true
+        console.log(
+          `%c[snap ${label}] ACTIVATE @ scrollY=${window.scrollY.toFixed(0)}`,
+          'color: lime; font-weight: bold',
+          icon
+        )
+        gsap.set(icon, { backgroundColor: iconActiveColor })
+        if (blur) gsap.set(blur, { opacity: 1 })
+      }
 
-      const trailLine = document.createElement('div')
-      trailLine.style.cssText = `
-        width: 100%;
-        height: 100%;
-        background: ${LINE_COLOR};
-      `
-      trailContainer.appendChild(trailLine)
-      document.body.appendChild(trailContainer)
+      const deactivate = () => {
+        if (!isActive) return
+        isActive = false
+        console.log(
+          `%c[snap ${label}] DEACTIVATE @ scrollY=${window.scrollY.toFixed(0)}`,
+          'color: orange; font-weight: bold',
+          icon
+        )
+        gsap.set(icon, { backgroundColor: iconInactiveColor })
+        if (blur) gsap.set(blur, { opacity: 0 })
+      }
 
-      allTrails.push({ trailContainer, icon, natY: initNaturalY })
+      // Activation trigger — fires only on forward scroll past `top 50%`.
+      // Has no onLeaveBack, so refresh-induced state flips on this trigger
+      // (which happen when lazy images shift `top 50%` past the current
+      // scrollY) never deactivate the dot.
+      ScrollTrigger.create({
+        trigger: wrapper,
+        start: ACTIVATE_AT,
+        invalidateOnRefresh: true,
+        markers: { startColor: 'lime', endColor: 'lime', fontSize: 10 },
+        onRefresh: (self) => {
+          console.log(
+            `%c[snap ${label} ACTIVATE] refresh — fires at scrollY=${self.start.toFixed(0)}`,
+            'color: lime',
+            icon
+          )
+        },
+        onEnter: activate,
+      })
+
+      // Deactivation trigger — sits 5vh BELOW the activation point. The
+      // user has to scroll back PAST that lower boundary before the dot
+      // turns off, so Lenis micro-jitter and small layout shifts around
+      // the activation point can't flip the dot.
+      // Direction guard catches the remaining refresh-induced case where
+      // a big layout shift moves `top 55%` ahead of current scrollY: in
+      // that case `self.direction` stays at 1 (last user direction), so
+      // we ignore.
+      ScrollTrigger.create({
+        trigger: wrapper,
+        start: DEACTIVATE_AT,
+        invalidateOnRefresh: true,
+        markers: { startColor: 'orange', endColor: 'orange', fontSize: 10 },
+        onRefresh: (self) => {
+          console.log(
+            `%c[snap ${label} DEACTIVATE] refresh — fires at scrollY=${self.start.toFixed(0)}`,
+            'color: orange',
+            icon
+          )
+        },
+        onLeaveBack: (self) => {
+          if (self.direction !== -1) {
+            console.log(
+              `%c[snap ${label}] leaveBack ignored (direction=${self.direction}, refresh-induced)`,
+              'color: gray',
+              icon
+            )
+            return
+          }
+          deactivate()
+        },
+      })
     })
 
     // -----------------------------------------------------------------
-    // BRIDGES — one per consecutive pair (+ grid-start). Grey track
-    // always full, red fills via scrub during the transition phase
-    // (startEl unsticks → endEl becomes sticky).
+    // Bridges between consecutive icons. The red line starts filling
+    // EARLIER than the previous dot's activation — at "wrapper top 80%"
+    // of the start icon — so by the time the start dot lights up there's
+    // already ~20% of red advancing toward the next dot. The bridge
+    // reaches 100% exactly when the next dot activates ("top 50%").
     // -----------------------------------------------------------------
-    const grid = container.querySelector('.featured-cards_grid')
-    const gridStart = grid?.firstElementChild
-
-    const pairs = []
-    if (gridStart) {
-      pairs.push({
-        startEl: gridStart,
-        endEl: icons[0],
-        kind: 'gridStart',
-        bullet: icons[0],
-      })
-    }
     for (let i = 0; i < icons.length - 1; i++) {
-      pairs.push({
-        startEl: icons[i],
-        endEl: icons[i + 1],
-        kind: 'iconPair',
-        bullet: icons[i + 1],
-      })
-    }
+      const startIcon = icons[i]
+      const endIcon = icons[i + 1]
+      const startWrapper = startIcon.closest('.featured-card_nav-wrapper')
+      const endWrapper = endIcon.closest('.featured-card_nav-wrapper')
+      if (!startWrapper || !endWrapper) continue
+      const pairLabel = `icon[${i}]→icon[${i + 1}]`
 
-    pairs.forEach((pair) => {
       const lineContainer = document.createElement('div')
       lineContainer.className = 'global-line global-line--bridge'
       lineContainer.style.cssText = `
@@ -173,52 +202,125 @@ export default function (elements) {
       lineContainer.appendChild(line)
       document.body.appendChild(lineContainer)
 
-      // Bullet activation
-      const { bullet } = pair
-      const blur = bullet?.querySelector('.featured-card_nav_icon-blur')
-      let isActive = false
-      const activate = () => {
-        if (isActive) return
-        isActive = true
-        gsap.to(bullet, {
-          backgroundColor: iconActiveColor,
-          duration: 0.3,
-          ease: 'power2.out',
-        })
-        if (blur) gsap.to(blur, { opacity: 1, duration: 0.3 })
-      }
-      const deactivate = () => {
-        if (!isActive) return
-        isActive = false
-        gsap.to(bullet, {
-          backgroundColor: iconInactiveColor,
-          duration: 0.3,
-          ease: 'power2.out',
-        })
-        if (blur) gsap.to(blur, { opacity: 0, duration: 0.3 })
-      }
-
-      const scrubStart = () => bridgeScrollStart(pair)
-      const scrubEnd = () => bridgeScrollEnd(pair)
-
       gsap.to(line, {
         scaleY: 1,
         ease: 'none',
         scrollTrigger: {
-          start: scrubStart,
-          end: scrubEnd,
+          trigger: startWrapper,
+          start: BRIDGE_START_AT,
+          endTrigger: endWrapper,
+          end: ACTIVATE_AT,
           scrub: true,
           invalidateOnRefresh: true,
-          onUpdate(self) {
-            if (!bullet) return
-            if (self.progress >= PROGRESS_THRESHOLD) activate()
-            else deactivate()
+          markers: { startColor: 'cyan', endColor: 'magenta', fontSize: 10 },
+          onRefresh: (self) => {
+            console.log(
+              `%c[bridge ${pairLabel}] refresh — start=${self.start.toFixed(0)} end=${self.end.toFixed(0)}`,
+              'color: cyan',
+              { startWrapper, endWrapper }
+            )
           },
         },
       })
 
-      allBridges.push({ lineContainer, line, pair })
-    })
+      allBridges.push({ lineContainer, startIcon, endIcon, pairLabel })
+    }
+
+    // -----------------------------------------------------------------
+    // First bridge — from the bottom of `.featured-cards_grid` (the row
+    // of card-buttons above the dots) down to icon[0]. Starts filling
+    // when the grid's BOTTOM edge crosses 50% of the viewport (per user
+    // request), reaches 100% exactly when icon[0] activates.
+    // Unique behaviour vs the dot-to-dot bridges:
+    //   • the grey track itself grows in (scaleY 0 → 1 over the first
+    //     20% of the scrub) so it's not pre-painted full-height waiting
+    //     to be filled — it appears as the line is "drawn" downward;
+    //   • the red line follows the scroll linearly over the full scrub.
+    // After the grey track is fully drawn (~20% of scrub), the red just
+    // fills inside it normally, matching the rest of the bridges.
+    // -----------------------------------------------------------------
+    const grid = container.querySelector('.featured-cards_grid')
+    const firstIconWrapper = icons[0].closest('.featured-card_nav-wrapper')
+    if (grid && firstIconWrapper) {
+      const lineContainer = document.createElement('div')
+      lineContainer.className =
+        'global-line global-line--bridge global-line--first'
+      lineContainer.style.cssText = `
+        position: absolute;
+        width: ${LINE_WIDTH}px;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+      `
+
+      const bg = document.createElement('div')
+      bg.style.cssText = `
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        background: ${LINE_BG_COLOR};
+        transform-origin: top center;
+        transform: scaleY(0);
+      `
+      lineContainer.appendChild(bg)
+
+      const line = document.createElement('div')
+      line.style.cssText = `
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: ${LINE_COLOR};
+        transform-origin: top center;
+        transform: scaleY(0);
+      `
+      lineContainer.appendChild(line)
+      document.body.appendChild(lineContainer)
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: grid,
+          start: 'bottom 50%',
+          endTrigger: firstIconWrapper,
+          end: 'top 50%',
+          scrub: true,
+          invalidateOnRefresh: true,
+          markers: { startColor: 'cyan', endColor: 'magenta', fontSize: 10 },
+          onRefresh: (self) => {
+            console.log(
+              `%c[bridge grid→icon[0]] refresh — start=${self.start.toFixed(0)} end=${self.end.toFixed(0)}`,
+              'color: cyan',
+              { grid, firstIconWrapper }
+            )
+          },
+        },
+      })
+      // Grey track grows in quickly during the first 20% of the scrub
+      tl.to(bg, { scaleY: 1, ease: 'none', duration: 0.2 }, 0)
+      // Red line follows scroll linearly over the full scrub
+      tl.to(line, { scaleY: 1, ease: 'none', duration: 1 }, 0)
+
+      // After the first bridge starts appearing, fade in the rest of the
+      // timeline (the other dots + their inter-dot bridge containers) so
+      // they don't pop in visible while the first bridge is still drawing.
+      // Hidden at init via opacity 0 and tweened back to 1 between 30%
+      // and 80% of the first bridge's scrub — fully visible well before
+      // icon[0] activates at the end.
+      const fadeTargets = [
+        ...icons,
+        ...allBridges.filter((b) => !b.isFirst).map((b) => b.lineContainer),
+      ]
+      gsap.set(fadeTargets, { opacity: 0 })
+      tl.to(fadeTargets, { opacity: 1, ease: 'none', duration: 0.5 }, 0.3)
+
+      allBridges.push({
+        lineContainer,
+        startEl: grid,
+        endIcon: icons[0],
+        isFirst: true,
+        pairLabel: 'grid→icon[0]',
+      })
+    }
 
     repositionAll()
   })
@@ -261,40 +363,20 @@ export default function (elements) {
   })
 
   // ---------------------------------------------------------------------------
-  // Scroll ranges for bridge scrubs
+  // Per-tick repositioning — keeps each bridge container stuck to its two
+  // dots through every sticky / flow / pinned transition.
   // ---------------------------------------------------------------------------
-  function bridgeScrollStart(pair) {
-    if (pair.kind === 'gridStart') {
-      // Grid-start bridge: red fills from "grid bottom at 8rem" …
-      return rectPageBottom(pair.startEl) - STICKY_TOP_PX
-    }
-    // Icon bridge: red fills from "startEl unsticks" …
-    return scrollAtUnstick(pair.startEl)
-  }
+  function positionBridge(bridge) {
+    const { lineContainer, startIcon, endIcon, startEl, isFirst } = bridge
+    const endC = iconCenter(endIcon)
 
-  function bridgeScrollEnd(pair) {
-    // … to "endEl becomes sticky".
-    return scrollAtSticky(pair.endEl)
-  }
-
-  // ---------------------------------------------------------------------------
-  // Per-tick repositioning
-  // ---------------------------------------------------------------------------
-  function positionBridge({ lineContainer, pair }) {
-    const { startEl, endEl, kind } = pair
-
-    if (kind === 'gridStart' && window.innerWidth <= MOBILE_BREAKPOINT) {
-      lineContainer.style.display = 'none'
-      return
-    }
-
-    // Bridge connects between dots with LINE_GAP clearance around each dot.
-    const endC = iconCenter(endEl)
     let topPageY
-    if (kind === 'gridStart') {
-      topPageY = startEl.getBoundingClientRect().bottom + window.scrollY
+    if (isFirst) {
+      // First bridge: anchored to the bottom of the grid element above.
+      const r = startEl.getBoundingClientRect()
+      topPageY = r.bottom + window.scrollY
     } else {
-      topPageY = iconCenter(startEl).pageY + LINE_GAP
+      topPageY = iconCenter(startIcon).pageY + LINE_GAP
     }
     const bottomPageY = endC.pageY - LINE_GAP
     const heightPx = bottomPageY - topPageY
@@ -310,33 +392,14 @@ export default function (elements) {
     lineContainer.style.height = `${heightPx}px`
   }
 
-  function positionTrail(trail) {
-    const c = iconCenter(trail.icon)
-    const heightPx = c.pageY - trail.natY - LINE_GAP
-
-    if (heightPx <= 1) {
-      trail.trailContainer.style.display = 'none'
-      return
-    }
-
-    trail.trailContainer.style.display = ''
-    trail.trailContainer.style.left = `${c.pageX - LINE_WIDTH / 2}px`
-    trail.trailContainer.style.top = `${trail.natY}px`
-    trail.trailContainer.style.height = `${heightPx}px`
-  }
-
   function repositionAll() {
     allBridges.forEach(positionBridge)
-    allTrails.forEach(positionTrail)
   }
 
   if (window.gsap) gsap.ticker.add(repositionAll)
 
   return {
     resize() {
-      allTrails.forEach((trail) => {
-        trail.natY = naturalCenterY(trail.icon)
-      })
       repositionAll()
       if (window.ScrollTrigger) ScrollTrigger.refresh()
     },
