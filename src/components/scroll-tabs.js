@@ -4,8 +4,6 @@ Webflow attribute: data-component="scroll-tabs"
 */
 
 const CROSSFADE = 0.3
-const INACTIVE_FILTER = 'grayscale(1) brightness(0.6)'
-const ACTIVE_FILTER = 'grayscale(0) brightness(1)'
 const MOBILE_BREAKPOINT = 991
 
 /**
@@ -29,6 +27,12 @@ export default function (elements) {
     const numTabs = buttons.length
     if (!frame || !numTabs || panels.length !== numTabs) return
 
+    const cs = getComputedStyle(el)
+    const dotInactiveColor =
+      cs.getPropertyValue('--base--grey-2').trim() || '#4c6280'
+    const dotActiveColor =
+      cs.getPropertyValue('--base--red').trim() || '#E10600'
+
     let st = null
     let activeTab = 0
     let inactiveColor = ''
@@ -45,7 +49,7 @@ export default function (elements) {
       activated[index] = true
       gsap.to(buttons[index], { color: '#ffffff', duration: CROSSFADE })
       gsap.to(dots[index], {
-        filter: ACTIVE_FILTER,
+        backgroundColor: dotActiveColor,
         duration: CROSSFADE,
         ease: 'power2.out',
       })
@@ -58,7 +62,7 @@ export default function (elements) {
       activated[index] = false
       gsap.to(buttons[index], { color: inactiveColor, duration: CROSSFADE })
       gsap.to(dots[index], {
-        filter: INACTIVE_FILTER,
+        backgroundColor: dotInactiveColor,
         duration: CROSSFADE,
         ease: 'power2.out',
       })
@@ -79,8 +83,8 @@ export default function (elements) {
           if (img) {
             gsap.fromTo(
               img,
-              { scale: 0.96, y: 8 },
-              { scale: 1, y: 0, duration: 0.45, ease: 'power2.out' }
+              { scale: 0.98, y: 4 },
+              { scale: 1, y: 0, duration: 0.6, ease: 'sine.inOut' }
             )
           }
         } else if (gsap.getProperty(panel, 'opacity') > 0) {
@@ -120,7 +124,10 @@ export default function (elements) {
         })
       })
       dots.forEach((dot, i) => {
-        gsap.set(dot, { filter: i === 0 ? ACTIVE_FILTER : INACTIVE_FILTER })
+        gsap.set(dot, {
+          filter: 'none',
+          backgroundColor: i === 0 ? dotActiveColor : dotInactiveColor,
+        })
       })
       dotBlurs.forEach((blur, i) => {
         gsap.set(blur, { opacity: i === 0 ? 1 : 0 })
@@ -189,6 +196,7 @@ export default function (elements) {
       dots.forEach((dot) => {
         gsap.killTweensOf(dot)
         dot.style.filter = ''
+        dot.style.backgroundColor = ''
       })
       dotBlurs.forEach((blur) => {
         gsap.killTweensOf(blur)
