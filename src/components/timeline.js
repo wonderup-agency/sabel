@@ -256,7 +256,46 @@ export default function (elements) {
       lineContainer.appendChild(line)
       document.body.appendChild(lineContainer)
 
-      const tl = gsap.timeline({
+      // Other timeline elements (the 4 other dots + their inter-dot bridge
+      // containers) start hidden; they fade in alongside the grey track
+      // entrance below.
+      const fadeTargets = [
+        ...icons,
+        ...allBridges.filter((b) => !b.isFirst).map((b) => b.lineContainer),
+      ]
+      gsap.set(fadeTargets, { opacity: 0 })
+
+      // Entrance — fires ONCE (not scrub) when `.featured-cards_grid`'s
+      // bottom enters the viewport, i.e. once the user has scrolled enough
+      // that the cards above are visibly settled. The grey first-bridge
+      // track grows in as a single 0.5s motion, and the rest of the
+      // timeline fades in at the same time. Reverses if the user scrolls
+      // back above the trigger.
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: grid,
+            start: 'bottom 80%',
+            toggleActions: 'play none none reverse',
+            invalidateOnRefresh: true,
+            onRefresh: (self) => {
+              console.log(
+                `%c[first bridge entrance] refresh — fires at scrollY=${self.start.toFixed(0)}`,
+                'color: cyan',
+                { grid }
+              )
+            },
+          },
+        })
+        .to(bg, { scaleY: 1, duration: 0.5, ease: 'power2.out' }, 0)
+        .to(fadeTargets, { opacity: 1, duration: 0.5, ease: 'power2.out' }, 0)
+
+      // Red line — scrubs with scroll across the same range as before, so
+      // it tracks the user's scroll position linearly and reaches 100%
+      // exactly when icon[0] activates.
+      gsap.to(line, {
+        scaleY: 1,
+        ease: 'none',
         scrollTrigger: {
           trigger: grid,
           start: 'bottom 50%',
@@ -266,30 +305,13 @@ export default function (elements) {
           invalidateOnRefresh: true,
           onRefresh: (self) => {
             console.log(
-              `%c[bridge grid→icon[0]] refresh — start=${self.start.toFixed(0)} end=${self.end.toFixed(0)}`,
+              `%c[first bridge red scrub] refresh — start=${self.start.toFixed(0)} end=${self.end.toFixed(0)}`,
               'color: cyan',
               { grid, firstIconWrapper }
             )
           },
         },
       })
-      // Grey track grows in quickly during the first 20% of the scrub
-      tl.to(bg, { scaleY: 1, ease: 'none', duration: 0.2 }, 0)
-      // Red line follows scroll linearly over the full scrub
-      tl.to(line, { scaleY: 1, ease: 'none', duration: 1 }, 0)
-
-      // After the first bridge starts appearing, fade in the rest of the
-      // timeline (the other dots + their inter-dot bridge containers) so
-      // they don't pop in visible while the first bridge is still drawing.
-      // Hidden at init via opacity 0 and tweened back to 1 between 30%
-      // and 80% of the first bridge's scrub — fully visible well before
-      // icon[0] activates at the end.
-      const fadeTargets = [
-        ...icons,
-        ...allBridges.filter((b) => !b.isFirst).map((b) => b.lineContainer),
-      ]
-      gsap.set(fadeTargets, { opacity: 0 })
-      tl.to(fadeTargets, { opacity: 1, ease: 'none', duration: 0.5 }, 0.3)
 
       allBridges.push({
         lineContainer,
