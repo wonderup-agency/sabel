@@ -1,1 +1,164 @@
-var t=[{selector:"[data-component='pricing-calculator']",importFn:()=>import("./index-BFnxnO5i.js")},{selector:"[data-component='cta']",importFn:()=>import("./cta-Cr1eBiZe.js")},{selector:"[data-component='concat']",importFn:()=>import("./concat-BvxHY5Au.js")},{selector:"[data-component='fin-branch-lines']",importFn:()=>import("./fin-branch-lines-DxbAdA0b.js")},{selector:"[data-component='impact']",importFn:()=>import("./impact-B5lIzTU_.js")},{selector:"[data-component='intercom-timeline']",importFn:()=>import("./intercom-timeline-XAraBArX.js")},{selector:"[data-component='navbar']",importFn:()=>import("./navbar-DIbvlwKw.js")},{selector:"[data-component='scroll-tabs']",importFn:()=>import("./scroll-tabs-BL4eUDH8.js")},{selector:"[data-component='hero']",importFn:()=>import("./hero-BpLjvDKn.js")},{selector:"[data-component='steps-timeline']",importFn:()=>import("./steps-timeline-DuFCcgf2.js")},{selector:"[data-component='services-timeline']",importFn:()=>import("./services-timeline-Cw-KWeaK.js")},{selector:"[data-component='testimonial-cards']",importFn:()=>import("./testimonial-cards-CdtR3xUL.js")},{selector:"[data-component='logo-marquee']",importFn:()=>import("./logo-marquee-Bt-D38f1.js")},{selector:"[data-component='horizontal-line']",importFn:()=>import("./horizontal-line-BrjoUgVm.js")},{selector:"[data-component='vertical-line']",importFn:()=>import("./vertical-line-BL4vIHI_.js")},{selector:"[data-component='timeline']",importFn:()=>import("./timeline-DSeAmfTx.js")},{selector:"[data-component='home']",importFn:()=>import("./home-wbrGu9jJ.js")},{selector:"[data-component='map']",importFn:()=>import("./map-5khP-K4O.js")},{selector:"[data-component='noise-effect']",importFn:()=>import("./noise-effect-CKxTLqe9.js")}];const o=[];async function e({selector:t,importFn:e}){const n=function(t){const o=t.match(/data-component=['"](.*?)['"]/);return o?o[1]:"unknown"}(t);try{const i=document.querySelectorAll(t);if(0===i.length)return;const r=await e();if("function"==typeof r.default){const t=r.default(Array.from(i));t&&"object"==typeof t&&o.push({name:n,hooks:t})}}catch(t){}}window.addEventListener("resize",()=>{o.forEach(({hooks:t})=>{"function"==typeof t.resize&&t.resize()})}),document.addEventListener("DOMContentLoaded",async()=>{try{const t=await import("./global-DY0UojP2.js");"function"==typeof t.default&&t.default()}catch(t){}await Promise.all(t.map(e))});
+// --------------------------------------------------
+// Component Registry
+// --------------------------------------------------
+// Each entry maps a data-component attribute to a lazy import.
+// Components only load when their selector exists on the page.
+//
+// 3 ways to add a component:
+//
+// 1. Ask Claude  → "create a component called calculator"
+// 2. Terminal    → npm run create-component -- calculator
+// 3. Dashboard   → npm start → Create → Component → type "calculator"
+//
+// All three scaffold the file and add an entry here automatically.
+// --------------------------------------------------
+
+var components = [
+  {
+    selector: "[data-component='pricing-calculator']",
+    importFn: () => import('./index-BDyECLZQ.js'),
+  },
+  {
+    selector: "[data-component='cta']",
+    importFn: () => import('./cta-ByNl2mhF.js'),
+  },
+  {
+    selector: "[data-component='concat']",
+    importFn: () => import('./concat-rC9QoTSD.js'),
+  },
+  {
+    selector: "[data-component='fin-branch-lines']",
+    importFn: () => import('./fin-branch-lines-BnSFXGG4.js'),
+  },
+  {
+    selector: "[data-component='impact']",
+    importFn: () => import('./impact-CSO1apl6.js'),
+  },
+  {
+    selector: "[data-component='intercom-timeline']",
+    importFn: () => import('./intercom-timeline-BaTg5OVG.js'),
+  },
+  {
+    selector: "[data-component='navbar']",
+    importFn: () => import('./navbar-O8wib-gD.js'),
+  },
+  {
+    selector: "[data-component='scroll-tabs']",
+    importFn: () => import('./scroll-tabs-D832hTpj.js'),
+  },
+  {
+    selector: "[data-component='hero']",
+    importFn: () => import('./hero-DYSVy1Yf.js'),
+  },
+  {
+    selector: "[data-component='steps-timeline']",
+    importFn: () => import('./steps-timeline-BUBSxHAI.js'),
+  },
+  {
+    selector: "[data-component='services-timeline']",
+    importFn: () => import('./services-timeline-DVm6AkXu.js'),
+  },
+  {
+    selector: "[data-component='testimonial-cards']",
+    importFn: () => import('./testimonial-cards-Do5k0857.js'),
+  },
+  {
+    selector: "[data-component='logo-marquee']",
+    importFn: () => import('./logo-marquee-cCrG91kZ.js'),
+  },
+  {
+    selector: "[data-component='horizontal-line']",
+    importFn: () => import('./horizontal-line-CUPvkS_1.js'),
+  },
+  {
+    selector: "[data-component='vertical-line']",
+    importFn: () => import('./vertical-line-BqGQSOHz.js'),
+  },
+  {
+    selector: "[data-component='timeline']",
+    importFn: () => import('./timeline-BdT81aeY.js'),
+  },
+  {
+    selector: "[data-component='home']",
+    importFn: () => import('./home-Ikk8LJqs.js'),
+  },
+  {
+    selector: "[data-component='map']",
+    importFn: () => import('./map-DF7fmC3K.js'),
+  },
+  {
+    selector: "[data-component='noise-effect']",
+    importFn: () => import('./noise-effect-CpCIg5E0.js'),
+  },
+];
+
+function getComponentName(selector) {
+  const match = selector.match(/data-component=['"](.*?)['"]/);
+  return match ? match[1] : 'unknown'
+}
+
+const activeComponents = [];
+
+async function loadComponent({ selector, importFn }) {
+  const componentName = getComponentName(selector);
+  try {
+    const elements = document.querySelectorAll(selector);
+    if (elements.length === 0) return
+    const module = await importFn();
+
+    if (typeof module.default === 'function') {
+      console.log(
+        `%c⚡ [main.js] Loading ${componentName}`,
+        'color: #a78bfa; font-weight: bold'
+      );
+      const result = module.default(Array.from(elements));
+
+      if (result && typeof result === 'object') {
+        activeComponents.push({ name: componentName, hooks: result });
+      }
+    } else {
+      console.warn(
+        `%c⚠️ [main.js] No valid default function found in ${componentName}.js`,
+        'color: #fbbf24; font-weight: bold'
+      );
+    }
+  } catch (error) {
+    console.error(
+      `%c❌ [main.js] Failed to load ${componentName}:`,
+      'color: #f87171; font-weight: bold',
+      error
+    );
+  }
+}
+
+// Wire up lifecycle hooks
+window.addEventListener('resize', () => {
+  activeComponents.forEach(({ hooks }) => {
+    if (typeof hooks.resize === 'function') hooks.resize();
+  });
+});
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const module = await import('./global-C0a2qbmv.js');
+    if (typeof module.default === 'function') {
+      console.log(
+        '%c🌍 [main.js] Loading global function',
+        'color: #a78bfa; font-weight: bold'
+      );
+      module.default();
+    } else {
+      console.warn(
+        '%c⚠️ [main.js] No valid default function found in global.js',
+        'color: #fbbf24; font-weight: bold'
+      );
+    }
+  } catch (error) {
+    console.error(
+      '%c❌ [main.js] Failed to load global function:',
+      'color: #f87171; font-weight: bold',
+      error
+    );
+  }
+  await Promise.all(components.map(loadComponent));
+});
+//# sourceMappingURL=main.js.map

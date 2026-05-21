@@ -81,7 +81,9 @@ export default function () {
       document.body.appendChild(container)
 
       const triggerSel = startEl.getAttribute('line-trigger')
-      const triggerEl = triggerSel ? document.querySelector(triggerSel) : startEl
+      const triggerEl = triggerSel
+        ? document.querySelector(triggerSel)
+        : startEl
 
       gsap.to(line, {
         scaleY: 1,
@@ -230,7 +232,9 @@ export default function () {
 
     const cardShown = new Array(cards.length).fill(false)
 
-    const sloganTrigger = document.querySelector('[home-animation="section-slogan"]')
+    const sloganTrigger = document.querySelector(
+      '[home-animation="section-slogan"]'
+    )
 
     const tl = gsap.timeline({
       scrollTrigger: {
