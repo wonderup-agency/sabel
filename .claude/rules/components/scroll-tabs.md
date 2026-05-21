@@ -45,8 +45,8 @@ For CMS collection lists, set attributes on the collection item template once �
   6. **Tab activation**: When a tab boundary is crossed:
      - **Forward**: Completed tabs keep their line at 100%, dot stays red (via `backgroundColor` tween), text stays white (accumulates). New tab activates with 0.3s transitions.
      - **Backward**: Future tabs deactivate — dot `backgroundColor` tweens back to grey-2, text returns to original color, line resets to 0. Previous panel crossfades back in.
-  7. **Panel crossfade**: Active panel fades in (opacity 0→1, 0.3s). The `.scroll-tabs_panels_image` inside the entering panel simultaneously animates from `scale: 0.98, y: 4` to `scale: 1, y: 0` (duration 0.6s, `sine.inOut`) for a soft zoom-in feel. Previous panel fades out and gets `visibility: hidden` + `pointer-events: none` after the fade. In-progress tweens on both panels and their images are killed before starting new ones to handle fast scrolling.
-  8. **Click to scroll**: Each tab button has a click handler that computes the target scroll position from the ScrollTrigger's start/end range and calls `window.scrollTo({ behavior: 'smooth' })`, which Lenis intercepts for smooth scrolling. Click handler is a no-op on mobile (guarded by ScrollTrigger existence check).
+  7. **Panel crossfade**: Active panel fades in (opacity 0→1, 0.3s). The `.scroll-tabs_panels_image` inside the entering panel simultaneously animates from `scale: 0.98, y: 4` to `scale: 1, y: 0` (duration 0.6s, `sine.inOut`) for a soft zoom-in feel. Previous panel fades out and gets `visibility: hidden` + `pointer-events: none` after the fade. In-progress tweens on both panels and their images are killed before starting new ones to handle fast scrolling. When hiding a panel, its image is immediately reset to the `from` state (`scale: 0.98, y: 4`) so that the next `fromTo` entrance animation starts from a clean baseline — prevents a "plays twice" visual artifact caused by stale mid-animation transforms on hidden panels.
+  8. **Click to scroll**: Each tab button has a click handler that computes the target scroll position from the ScrollTrigger's start/end range and calls `lenis.scrollTo(target)` directly (obtained via `getLenis()` from `global.js`), falling back to `window.scrollTo({ behavior: 'smooth' })` if Lenis isn't available. Uses `lenis.scrollTo(target, { immediate: true })` — an instant jump rather than a smooth scroll. This prevents `onUpdate` from firing for intermediate tab zones during transit, which would trigger spurious `showPanel` calls and make the panel animation appear to run twice. The target is `(i + 0.05) / numTabs` of the total range — 5% into each tab's zone — rather than the lower boundary, avoiding a floating-point precision bug where `Math.floor((i/N) * N)` evaluates to `i-1`. Click handler is a no-op on mobile (guarded by ScrollTrigger existence check).
 
   Text merging like `position + name` is now handled by the standalone `concat` component — wrap the relevant fields inside any panel in `<div data-component="concat">` in Webflow.
 
@@ -58,7 +58,7 @@ For CMS collection lists, set attributes on the collection item template once �
 ## Dependencies
 
 - **GSAP** (global): `gsap`, `ScrollTrigger` — loaded via Webflow's GSAP integration.
-- **Lenis** (via global.js): Intercepts `window.scrollTo` for smooth click-to-scroll behavior.
+- **`global.js`** (`getLenis`): Named import used in the click handler to call `lenis.scrollTo()` directly — ensures in-progress animations are cancelled on each click. Falls back to `window.scrollTo` if Lenis isn't ready.
 - **CSS variables**: `var(--base--red)` for the active dot, `var(--base--grey-2, #4c6280)` for the inactive dot. Read from the component's computed style at init; hex fallbacks (`#E10600` / `#4c6280`) cover cases where the Webflow variable isn't defined on the cascading chain.
 
 ## DOM Expectations

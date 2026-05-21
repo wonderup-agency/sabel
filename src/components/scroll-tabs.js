@@ -3,6 +3,8 @@ Component: scroll-tabs
 Webflow attribute: data-component="scroll-tabs"
 */
 
+import { getLenis } from './global.js'
+
 const CROSSFADE = 0.3
 const MOBILE_BREAKPOINT = 991
 
@@ -88,6 +90,7 @@ export default function (elements) {
             )
           }
         } else if (gsap.getProperty(panel, 'opacity') > 0) {
+          if (img) gsap.set(img, { scale: 0.98, y: 4 })
           gsap.to(panel, {
             opacity: 0,
             duration: CROSSFADE,
@@ -219,8 +222,13 @@ export default function (elements) {
     buttons.forEach((btn, i) => {
       btn.addEventListener('click', () => {
         if (!st) return
-        const targetScroll = st.start + (i / numTabs) * (st.end - st.start)
-        window.scrollTo({ top: targetScroll, behavior: 'smooth' })
+        const targetScroll = st.start + ((i + 0.05) / numTabs) * (st.end - st.start)
+        const lenis = getLenis()
+        if (lenis) {
+          lenis.scrollTo(targetScroll, { immediate: true })
+        } else {
+          window.scrollTo({ top: targetScroll, behavior: 'smooth' })
+        }
       })
     })
 
