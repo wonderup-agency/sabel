@@ -1,0 +1,1 @@
+function t(t){t.forEach(t=>{const n=[...t.children];if(n.length<2)return;const e=n.map(t=>t.textContent.trim()).filter(t=>t.length>0);if(0===e.length)return;const[o,...r]=n;o.textContent=e.join(", "),r.forEach(t=>t.remove())})}export{t as default};
