@@ -296,7 +296,7 @@ export default function () {
       scrollTrigger: {
         trigger: sloganTitle,
         start: 'top 60%',
-        once: true,
+        toggleActions: 'play none none reverse',
       },
     })
   }

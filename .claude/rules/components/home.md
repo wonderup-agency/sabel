@@ -37,7 +37,7 @@ This renders a `#94A3B8` background line at full height that the red animated li
   2. **Nav reveal**: Navbar starts hidden (opacity 0, blurred, translated up). When `[home-animation="section-slogan"]` enters viewport center, nav animates in. Reverses on scroll back.
   3. **Hero entrance**: Staggered deblur + fade-in for `.home-hero_title`, `.home-hero_text`, `[home-animation="logo-1"]`, `[home-animation="logo-2"]`, and the infinite lines element.
   4. **Branch lines**: Scrub-controlled animation tied to scroll position (`top 50%` → `bottom 30%`). The main vertical line (path starting at y≈0) draws first with `ease: none` so scroll progress maps 1:1 to how far down it's drawn. All branch paths fire together the moment the main line completes (`branchStart = mainDuration`), which is exactly when it visually reaches the branch point. Branches are sorted left-to-right by their end X position (via `getPointAtLength`) and staggered so the leftmost reaches its final state first, progressing right. All 5 branch paths map 1:1 to 5 `.featured-card_button` cards that reveal (fade + y) when the line completes and hide when scroll reverses past that threshold — driven by `onUpdate` on the ScrollTrigger, not scrub, for a proper entrance/exit animation. Reverses automatically on scroll back.
-  5. **Slogan**: `[home-animation="slogan"]` deblurs and fades in when it enters viewport (top 60%). Plays once.
+  5. **Slogan**: `[home-animation="slogan"]` deblurs and fades in when it enters viewport (top 60%). Reverses (blurs out) when scrolling back above the trigger, so the animation replays on the next scroll down.
 - **Resize**: Recalculates global line positions and refreshes ScrollTrigger.
 
 ## Dependencies
