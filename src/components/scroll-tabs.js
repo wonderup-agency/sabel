@@ -222,7 +222,8 @@ export default function (elements) {
     buttons.forEach((btn, i) => {
       btn.addEventListener('click', () => {
         if (!st) return
-        const targetScroll = st.start + ((i + 0.05) / numTabs) * (st.end - st.start)
+        const targetScroll =
+          st.start + ((i + 0.05) / numTabs) * (st.end - st.start)
         const lenis = getLenis()
         if (lenis) {
           lenis.scrollTo(targetScroll, { immediate: true })
