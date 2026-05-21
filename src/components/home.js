@@ -80,11 +80,14 @@ export default function () {
       container.appendChild(line)
       document.body.appendChild(container)
 
+      const triggerSel = startEl.getAttribute('line-trigger')
+      const triggerEl = triggerSel ? document.querySelector(triggerSel) : startEl
+
       gsap.to(line, {
         scaleY: 1,
         ease: 'none',
         scrollTrigger: {
-          trigger: startEl,
+          trigger: triggerEl,
           endTrigger: endEl,
           start: 'center center',
           end: 'center center',
@@ -227,10 +230,13 @@ export default function () {
 
     const cardShown = new Array(cards.length).fill(false)
 
+    const sloganTrigger = document.querySelector('[home-animation="section-slogan"]')
+
     const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: branchSection,
-        start: 'top 50%',
+        trigger: sloganTrigger || branchSection,
+        start: sloganTrigger ? 'center center' : 'top 50%',
+        endTrigger: branchSection,
         end: 'bottom 30%',
         scrub: true,
         onUpdate(self) {
