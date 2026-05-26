@@ -45,6 +45,11 @@
   [data-component='pricing-calculator'] .pc-scoping-grid {
     grid-template-columns: 1fr;
   }
+  [data-component='pricing-calculator'] .pc-scoping-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
 }
 
 /* Step header */
