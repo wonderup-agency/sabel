@@ -217,9 +217,7 @@ export default function () {
     const cards = [...document.querySelectorAll('.featured-card_button')]
     // Mobile: skip the scroll-driven fade-in/reverse. Cards stay in their
     // natural Webflow state (visible) and the SVG paths still draw with scroll.
-    const isMobileBranchCards = window.matchMedia(
-      '(max-width: 991px)'
-    ).matches
+    const isMobileBranchCards = window.matchMedia('(max-width: 991px)').matches
     if (!isMobileBranchCards) gsap.set(cards, { autoAlpha: 0, y: 20 })
 
     const mainDuration = 0.5
