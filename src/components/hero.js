@@ -3,10 +3,14 @@ Component: hero
 Webflow attribute: data-component="hero"
 */
 
+import { buildLineCap } from './vertical-line.js'
+
 /**
  * @param {HTMLElement[]} elements - All elements matching [data-component='hero']
  */
 export default function (elements) {
+  const capRepositioners = []
+
   elements.forEach((el) => {
     const track = el.querySelector('[data-hero="line-track"]')
     const fill = el.querySelector('[data-hero="line-fill"]')
@@ -19,6 +23,20 @@ export default function (elements) {
       start: 'top 80%',
       end: 'bottom 50%',
     })
+
+    // Optional line caps on the track. Trigger points are aligned with the
+    // hero's own scroll range (top 80% start, bottom 50% end) so caps stay
+    // in sync with when the fill begins / finishes drawing.
+    if (track.getAttribute('line-cap-start') === 'True') {
+      capRepositioners.push(
+        buildLineCap(track, 'down', { triggerStart: 'top 80%' })
+      )
+    }
+    if (track.getAttribute('line-cap-end') === 'True') {
+      capRepositioners.push(
+        buildLineCap(track, 'up', { triggerStart: 'bottom 50%' })
+      )
+    }
 
     // Gate the scale tracking until the track's opacity transition completes
     // the first time. Once activated, stays activated — the fill will scale
@@ -62,4 +80,11 @@ export default function (elements) {
       gsap.set(fill, { scaleY: current })
     })
   })
+
+  return {
+    resize() {
+      capRepositioners.forEach((fn) => fn())
+      ScrollTrigger.refresh()
+    },
+  }
 }

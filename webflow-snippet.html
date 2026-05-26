@@ -1,117 +1,87 @@
 <!--
 Dev/Prod Switcher
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-The two tags below load production CSS+JS directly from the CDN.
-Your sync extension keeps the @<hash> portion up to date — do not
-edit them manually and do not move them.
-
-The inline script below those tags handles dev mode: when
-localStorage.dev is set, it removes the production tags above and
-loads from a custom dev URL instead. In production (no flag) it
-does nothing, leaving the direct loads untouched.
-
-⚠ Order matters: the inline <script> MUST stay AFTER the two
-production tags. The switcher relies on the parser having already
-inserted those tags into the DOM before it runs.
+CDN assets are always preloaded for fast production delivery.
+An inline script checks localStorage and loads either:
+  - CDN (production, default)
+  - localhost:8080 (dev mode)
 
 Toggle dev mode from browser devtools console:
   Enable:  localStorage.dev = '1'
   Disable: delete localStorage.dev
-
-Dev URL is hardcoded to http://127.0.0.1:8080.
-
-The page auto-reloads when dev changes in localStorage.
-
+https://supabase.com/
 Setup:
-  Replace "your-repo" and the version (@v1.0.0) with your actual
-  repository name and current tagged version (or commit hash) before
-  deploying. After that, the sync extension manages the @<hash> part.
+  Assets are always served from the latest @main branch via jsDelivr.
+  Note: jsDelivr aggressively caches @main — changes may take time to
+  propagate. Use the jsDelivr purge API if you need instant updates.
 -->
 
+<!-- Preload CDN assets — browser fetches these immediately during HTML parse,
+     before any JS runs. In dev mode these requests are wasted but harmless. -->
 <link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@v1.0.0/dist/styles.css"
+  rel="preload"
+  as="script"
+  href="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist/main.js"
+  crossorigin
 />
-<script
-  defer
-  type="module"
-  src="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@v1.0.0/dist/main.js"
-></script>
+<link
+  rel="preload"
+  as="style"
+  href="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist/styles.css"
+/>
 
 <script>
   ;(function () {
-    var DEV_BASE = 'http://127.0.0.1:8080'
     var dev = localStorage.dev
+    var cdn = 'https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist'
+    var base = dev ? 'http://127.0.0.1:8080' : cdn
 
+    var link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = base + '/styles.css'
+    document.head.appendChild(link)
+
+    var script = document.createElement('script')
+    script.src = base + '/main.js'
+    script.type = 'module'
+    script.defer = true
+    document.head.appendChild(script)
+
+    // Expose base URL so per-page bundle snippets reuse the same decision
+    window.__devBase = base
+
+    // Auto-reload when localStorage.dev is set or cleared from devtools
+    setInterval(function () {
+      if (!!localStorage.dev !== !!dev) location.reload()
+    }, 500)
+
+    // Dev mode indicator — only rendered when localStorage.dev is set
     if (dev) {
-      // Remove the production tags above so they don't fetch/execute.
-      // This script runs inline mid-parse — the deferred prod script
-      // hasn't executed yet (defer waits for DOMContentLoaded), so
-      // removing its node prevents execution entirely.
-      document
-        .querySelectorAll(
-          'link[href*="cdn.jsdelivr.net"][href*="/dist/"],' +
-            'script[src*="cdn.jsdelivr.net"][src*="/dist/"]'
-        )
-        .forEach(function (el) {
-          el.remove()
-        })
-
-      // Load from devBase instead
-      var link = document.createElement('link')
-      link.rel = 'stylesheet'
-      link.href = devBase + '/styles.css'
-      document.head.appendChild(link)
-
-      var script = document.createElement('script')
-      script.src = devBase + '/main.js'
-      script.type = 'module'
-      script.defer = true
-      document.head.appendChild(script)
-
-      // Expose dev base so per-page bundle snippets reuse the same decision
-      window.__devBase = devBase
-
-      // Auto-load eruda on touch devices — gives us a real
-      // console / network / elements panel inside the page.
-      var isTouchPrimary = window.matchMedia('(pointer: coarse)').matches
-      if (isTouchPrimary) {
-        var eruda = document.createElement('script')
-        eruda.src = 'https://cdn.jsdelivr.net/npm/eruda@3'
-        eruda.onload = function () {
-          window.eruda && window.eruda.init()
-        }
-        document.head.appendChild(eruda)
-      }
-
-      // DEV badge — bottom-left on touch so it doesn't overlap eruda's
-      // entry button (which lives bottom-right by default).
       document.addEventListener('DOMContentLoaded', function () {
         var s = document.createElement('style')
         s.textContent = '@keyframes dev-dot{0%,100%{opacity:1}50%{opacity:0.2}}'
         document.head.appendChild(s)
 
-        var sidePos = isTouchPrimary ? 'left:16px' : 'right:16px'
-
         var btn = document.createElement('button')
-        btn.title = 'Exit dev mode — loading from ' + devBase
+        btn.title = 'Exit dev mode'
         btn.innerHTML =
           '<span style="width:6px;height:6px;border-radius:50%;background:#4ade80;' +
-          'animation:dev-dot 1.5s ease-in-out infinite;flex-shrink:0"></span>DEV'
+          'animation:dev-dot 1.5s ease-in-out infinite;flex-shrink:0"></span>DEV' +
+          '<span style="margin-left:4px;font-size:10px;opacity:0.6">✕</span>'
         btn.style.cssText =
-          'all:unset;box-sizing:border-box;position:fixed;bottom:16px;' +
-          sidePos +
-          ';' +
+          'all:unset;box-sizing:border-box;position:fixed;bottom:16px;right:16px;' +
           'z-index:2147483647;display:flex;align-items:center;gap:7px;' +
           'background:rgba(0,0,0,0.8);color:#4ade80;' +
           'border:1px solid rgba(74,222,128,0.35);border-radius:6px;' +
           'padding:6px 10px;font:600 11px/1 monospace;letter-spacing:0.5px;' +
           'cursor:pointer;backdrop-filter:blur(6px);' +
-          'box-shadow:0 2px 10px rgba(0,0,0,0.4)'
+          'box-shadow:0 2px 10px rgba(0,0,0,0.4);opacity:0.5;transition:opacity 0.15s'
         btn.onmouseenter = function () {
+          btn.style.opacity = '1'
           btn.style.borderColor = 'rgba(74,222,128,0.8)'
         }
         btn.onmouseleave = function () {
+          btn.style.opacity = '0.5'
           btn.style.borderColor = 'rgba(74,222,128,0.35)'
         }
         btn.onclick = function () {
@@ -121,15 +91,6 @@ Setup:
         document.body.appendChild(btn)
       })
     }
-
-    // Auto-reload when dev flags change in localStorage. Runs in
-    // production too so flipping dev mode on from devtools triggers
-    // a reload immediately.
-    setInterval(function () {
-      var nowDev = !!localStorage.dev
-      var nowBase = localStorage.devBase || 'http://127.0.0.1:8080'
-      if (nowDev !== !!dev || nowBase !== devBase) location.reload()
-    }, 500)
   })()
 </script>
 
@@ -139,19 +100,13 @@ Per-page bundle snippet
 For page-specific bundles (src/pages/), add this to:
   Webflow → Page Settings → Custom Code → Before </head>
 
-Replace "your-repo", the version, and "bundle-name" with your values.
+Replace "bundle-name" with your page bundle name.
 The create-page script outputs the correct snippet automatically.
 
-  <script defer type="module" src="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@v1.0.0/dist/bundle-name.js"></script>
+  <link rel="preload" as="script" href="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist/bundle-name.js" crossorigin>
   <script>
     (function () {
-      if (!localStorage.dev) return
-      // In dev mode the head switcher removes prod tags and sets
-      // window.__devBase. Mirror that here for this page bundle.
-      document
-        .querySelectorAll('script[src*="cdn.jsdelivr.net"][src*="/bundle-name.js"]')
-        .forEach(function (el) { el.remove() })
-      var base = window.__devBase || 'http://127.0.0.1:8080'
+      var base = window.__devBase || (localStorage.dev ? 'http://127.0.0.1:8080' : 'https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist')
       var s = document.createElement('script')
       s.src = base + '/bundle-name.js'
       s.type = 'module'
