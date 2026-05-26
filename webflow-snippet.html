@@ -18,15 +18,9 @@ Toggle dev mode from browser devtools console:
   Enable:  localStorage.dev = '1'
   Disable: delete localStorage.dev
 
-Override the dev URL (e.g. for mobile testing via Cloudflare tunnel):
-  localStorage.devBase = 'https://random-words.trycloudflare.com'
-  Clear:   delete localStorage.devBase
-  Default (when not set): http://127.0.0.1:8080
+Dev URL is hardcoded to http://127.0.0.1:8080.
 
-On touch devices (phones, tablets), an in-page console (eruda) is
-automatically loaded whenever dev mode is on — no extra flag needed.
-
-The page auto-reloads when dev or devBase change in localStorage.
+The page auto-reloads when dev changes in localStorage.
 
 Setup:
   Replace "your-repo" and the version (@v1.0.0) with your actual
@@ -46,8 +40,8 @@ Setup:
 
 <script>
   ;(function () {
+    var DEV_BASE = 'http://127.0.0.1:8080'
     var dev = localStorage.dev
-    var devBase = localStorage.devBase || 'http://127.0.0.1:8080'
 
     if (dev) {
       // Remove the production tags above so they don't fetch/execute.

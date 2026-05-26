@@ -35,6 +35,10 @@ export default function (elements) {
 
     const items = [...section.querySelectorAll('[data-steps-timeline="item"]')]
     if (!items.length) return
+    console.log('test')
+    const iconWrappers = items.map((item) =>
+      item.querySelector('[data-steps-timeline="icon-wrapper"]')
+    )
 
     const parsedOffset = parseFloat(section.dataset.startOffset)
     const startOffsetDesktop = Number.isFinite(parsedOffset)
@@ -166,38 +170,56 @@ export default function (elements) {
         scrollTrigger: stConfig,
       })
 
-      allSegments.push({ lineEl, index: i, items, startOffsetDesktop })
+      allSegments.push({
+        lineEl,
+        index: i,
+        items,
+        iconWrappers,
+        startOffsetDesktop,
+      })
     }
   })
 
   // --- Per-frame repositioning ---
   function repositionAll() {
-    allSegments.forEach(({ lineEl, index, items, startOffsetDesktop }) => {
-      const firstCard = items[0]
-      const xPos =
-        firstCard.getBoundingClientRect().left + LINE_X_OFFSET + window.scrollX
+    allSegments.forEach(
+      ({ lineEl, index, items, iconWrappers, startOffsetDesktop }) => {
+        const firstCard = items[0]
+        const iconWrapper = iconWrappers[index]
+        let xPos
+        if (iconWrapper) {
+          const iconRect = iconWrapper.getBoundingClientRect()
+          xPos = iconRect.left + iconRect.width / 2 + window.scrollX
+        } else {
+          xPos =
+            firstCard.getBoundingClientRect().left +
+            LINE_X_OFFSET +
+            window.scrollX
+        }
 
-      let topY, bottomY
-      if (index === 0) {
-        const cardTop = firstCard.getBoundingClientRect().top + window.scrollY
-        topY = cardTop - getStartOffset(startOffsetDesktop)
-        bottomY = cardTop
-      } else {
-        topY = items[index - 1].getBoundingClientRect().bottom + window.scrollY
-        bottomY = items[index].getBoundingClientRect().top + window.scrollY
+        let topY, bottomY
+        if (index === 0) {
+          const cardTop = firstCard.getBoundingClientRect().top + window.scrollY
+          topY = cardTop - getStartOffset(startOffsetDesktop)
+          bottomY = cardTop
+        } else {
+          topY =
+            items[index - 1].getBoundingClientRect().bottom + window.scrollY
+          bottomY = items[index].getBoundingClientRect().top + window.scrollY
+        }
+
+        const height = bottomY - topY
+        if (height <= 0) {
+          lineEl.style.display = 'none'
+          return
+        }
+
+        lineEl.style.display = ''
+        lineEl.style.left = `${xPos}px`
+        lineEl.style.top = `${topY}px`
+        lineEl.style.height = `${height}px`
       }
-
-      const height = bottomY - topY
-      if (height <= 0) {
-        lineEl.style.display = 'none'
-        return
-      }
-
-      lineEl.style.display = ''
-      lineEl.style.left = `${xPos}px`
-      lineEl.style.top = `${topY}px`
-      lineEl.style.height = `${height}px`
-    })
+    )
   }
 
   if (allSegments.length) {
