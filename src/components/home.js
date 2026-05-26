@@ -215,7 +215,12 @@ export default function () {
 
     // All 5 branch paths map 1:1 to the 5 cards (sorted left-to-right, same as cards)
     const cards = [...document.querySelectorAll('.featured-card_button')]
-    gsap.set(cards, { autoAlpha: 0, y: 20 })
+    // Mobile: skip the scroll-driven fade-in/reverse. Cards stay in their
+    // natural Webflow state (visible) and the SVG paths still draw with scroll.
+    const isMobileBranchCards = window.matchMedia(
+      '(max-width: 991px)'
+    ).matches
+    if (!isMobileBranchCards) gsap.set(cards, { autoAlpha: 0, y: 20 })
 
     const mainDuration = 0.5
     const branchDuration = 0.3
@@ -244,6 +249,7 @@ export default function () {
         end: 'bottom 30%',
         scrub: true,
         onUpdate(self) {
+          if (isMobileBranchCards) return
           branchPaths.forEach((_, i) => {
             const card = cards[i]
             if (!card) return

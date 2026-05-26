@@ -5,12 +5,46 @@ import './global.css'
 let lenisInstance = null
 
 // Lets other components access the live Lenis instance (e.g. to stop/start
-// scroll while a modal is open). Returns null if global.js hasn't run yet.
+// scroll while a modal is open). Returns null on mobile (Lenis is gated to
+// desktop) or before global.js has run.
 export function getLenis() {
   return lenisInstance
 }
 
+// Lenis and the body ResizeObserver are disabled at and below this width.
+// Lenis fights iOS Safari's native momentum; the ResizeObserver triggers
+// ScrollTrigger.refresh storms when the address bar shows/hides during scroll.
+const MOBILE_BREAKPOINT = 991
+
 export default function () {
+  const isDesktop = window.matchMedia(
+    `(min-width: ${MOBILE_BREAKPOINT + 1}px)`
+  ).matches
+
+  // Toggle the .global-lines-visible class on <html> as the user scrolls
+  // past a small threshold. The matching CSS rule lives in global.css so
+  // .global-line elements start at opacity 0 from the first paint (no
+  // FOUC) regardless of when components append them to the DOM.
+  const SCROLL_THRESHOLD = 8 // px — dead zone to prevent flicker at the top
+  const updateGlobalLinesVisibility = () => {
+    document.documentElement.classList.toggle(
+      'global-lines-visible',
+      window.scrollY > SCROLL_THRESHOLD
+    )
+  }
+  updateGlobalLinesVisibility()
+
+  if (!isDesktop) {
+    // Mobile: native scroll. ScrollTrigger listens to window.scroll by
+    // default so no wiring is needed beyond the lines-visibility toggle.
+    window.addEventListener('scroll', updateGlobalLinesVisibility, {
+      passive: true,
+    })
+    return
+  }
+
+  // ---- Desktop only from here on ----
+
   const lenis = new Lenis({ autoRaf: false })
   lenisInstance = lenis
 
@@ -40,18 +74,5 @@ export default function () {
   }
   new ResizeObserver(scheduleRefresh).observe(document.body)
 
-  // Toggle the .global-lines-visible class on <html> as the user scrolls
-  // past a small threshold. The matching CSS rule lives in global.css so
-  // .global-line elements start at opacity 0 from the first paint (no
-  // FOUC) regardless of when components append them to the DOM.
-  const SCROLL_THRESHOLD = 8 // px — dead zone to prevent flicker at the top
-  const updateGlobalLinesVisibility = () => {
-    document.documentElement.classList.toggle(
-      'global-lines-visible',
-      window.scrollY > SCROLL_THRESHOLD
-    )
-  }
-
-  updateGlobalLinesVisibility()
   lenis.on('scroll', updateGlobalLinesVisibility)
 }
