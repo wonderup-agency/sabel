@@ -1,0 +1,5 @@
+@media (max-width: 991px) {
+  [data-component='blueprint-lines'] .featured-cards_lines {
+    display: none;
+  }
+}

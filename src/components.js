@@ -15,6 +15,10 @@
 
 export default [
   {
+    selector: "[data-component='blueprint-lines']",
+    importFn: () => import('./components/blueprint-lines.js'),
+  },
+  {
     selector: "[data-component='pricing-calculator']",
     importFn: () => import('./components/pricing-calculator/index.js'),
   },
