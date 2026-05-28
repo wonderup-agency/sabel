@@ -1,0 +1,3 @@
+[data-component='testimonial-cards'] .swiper-slide:not(.swiper-slide-active) {
+  border-left-color: transparent;
+}
