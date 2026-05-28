@@ -7,6 +7,13 @@ Webflow attribute: data-component="home"
  * @param {HTMLElement[]} elements - All elements matching [data-component='home']
  */
 export default function () {
+  console.log('[home] 🟢 component running', {
+    gsap: typeof gsap,
+    ScrollTrigger: typeof ScrollTrigger,
+    viewportWidth: window.innerWidth,
+    isMobile: window.matchMedia('(max-width: 991px)').matches,
+  })
+
   // ---------------------------------------------------------------------------
   // Global Lines — vertical lines between line-start / line-end pairs
   // (Skips pairs whose end is inside [data-component="timeline"])
@@ -26,6 +33,11 @@ export default function () {
     const isMobile = window.matchMedia('(max-width: 991px)').matches
     const starts = document.querySelectorAll('[line-start]')
     const ends = document.querySelectorAll('[line-end]')
+    console.log('[home] initGlobalLines', {
+      isMobile,
+      startsFound: starts.length,
+      endsFound: ends.length,
+    })
     const endMap = {}
     ends.forEach((el) => {
       endMap[el.getAttribute('line-end')] = el
@@ -41,12 +53,30 @@ export default function () {
 
       const mobileEndSel = startEl.getAttribute('line-end-mobile')
       if (isMobile && mobileEndSel) {
-        const mobileEnd = document.querySelector(mobileEndSel)
-        if (mobileEnd) endEl = mobileEnd
+        try {
+          const mobileEnd = document.querySelector(mobileEndSel)
+          if (mobileEnd) endEl = mobileEnd
+          console.log(
+            `[home] line "${id}" mobile override: "${mobileEndSel}" →`,
+            mobileEnd
+          )
+        } catch (e) {
+          console.warn(
+            `[home] Invalid line-end-mobile selector: "${mobileEndSel}"`,
+            e
+          )
+        }
       }
 
-      if (!endEl) return
-      if (timelineContainer && timelineContainer.contains(endEl)) return
+      if (!endEl) {
+        console.warn(`[home] line "${id}" skipped — no endEl found`)
+        return
+      }
+      if (timelineContainer && timelineContainer.contains(endEl)) {
+        console.log(`[home] line "${id}" skipped — endEl inside timeline`)
+        return
+      }
+      console.log(`[home] ✏️ drawing line "${id}"`, { startEl, endEl })
 
       const startPos = getCenter(startEl)
       const endPos = getCenter(endEl)
@@ -126,8 +156,10 @@ export default function () {
   // Nav — hidden on load, deblur reveal on second section
   // ---------------------------------------------------------------------------
   const nav = document.querySelector('.navbar_component')
+  console.log('[home] nav block', { navFound: !!nav })
   if (nav) {
     const isDesktop = window.matchMedia('(min-width: 992px)').matches
+    console.log('[home] nav mode:', isDesktop ? 'desktop' : 'mobile')
 
     if (!isDesktop) {
       gsap.set(nav, {
@@ -136,6 +168,10 @@ export default function () {
         yPercent: 0,
         backgroundColor: 'rgba(11, 11, 12, 0.5)',
       })
+      console.log(
+        '[home] nav opacity after set:',
+        window.getComputedStyle(nav).opacity
+      )
     } else {
       gsap.set(nav, { opacity: 0, filter: 'blur(12px)', yPercent: -100 })
 
@@ -190,8 +226,18 @@ export default function () {
     heroInfinite,
   ].filter(Boolean)
 
+  console.log('[home] hero items', {
+    heroTitle: !!heroTitle,
+    heroBy: !!heroBy,
+    heroLogo1: !!heroLogo1,
+    heroLogo2: !!heroLogo2,
+    heroInfinite: !!heroInfinite,
+    total: heroItems.length,
+  })
+
   if (heroItems.length) {
     gsap.set(heroItems, { opacity: 0, y: 20, filter: 'blur(12px)' })
+    console.log('[home] hero gsap.set done')
 
     gsap.to(heroItems, {
       opacity: 1,
@@ -201,6 +247,8 @@ export default function () {
       ease: 'power2.out',
       stagger: 0.25,
       delay: 0.3,
+      onStart: () => console.log('[home] hero gsap.to onStart'),
+      onComplete: () => console.log('[home] ✅ hero gsap.to onComplete'),
     })
   }
 
