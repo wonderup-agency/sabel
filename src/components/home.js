@@ -242,6 +242,7 @@ export default function () {
   // ---------------------------------------------------------------------------
   const heroTitle = document.querySelector('.home-hero_title')
   const heroBy = document.querySelector('.home-hero_text')
+  const heroRive = document.querySelector('.home-hero_rive-wrapper')
   const heroLogo1 = document.querySelector('[home-animation="logo-1"]')
   const heroLogo2 = document.querySelector('[home-animation="logo-2"]')
 
@@ -251,6 +252,7 @@ export default function () {
   const heroItems = [
     heroTitle,
     heroBy,
+    heroRive,
     heroLogo1,
     heroLogo2,
     heroInfinite,
@@ -259,6 +261,7 @@ export default function () {
   console.log('[home] hero items', {
     heroTitle: !!heroTitle,
     heroBy: !!heroBy,
+    heroRive: !!heroRive,
     heroLogo1: !!heroLogo1,
     heroLogo2: !!heroLogo2,
     heroInfinite: !!heroInfinite,
