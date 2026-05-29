@@ -29,12 +29,26 @@ export default function () {
     }
   }
 
+  // Page-relative Y of an element's TOP edge. Used for the end anchor when a
+  // line points at a tall container (e.g. the mobile override to
+  // .featured-cards_grid) so the line stops at the top of the cards rather
+  // than running down to the container's vertical center.
+  function getTopY(el) {
+    return el.getBoundingClientRect().top + window.scrollY
+  }
+
   function initGlobalLines() {
+    // The line-end-mobile override only applies on Webflow's Mobile Portrait
+    // breakpoint (≤479px). On Tablet (≤991) and Mobile Landscape (≤767) the
+    // line keeps the desktop endpoint (its normal line-end pair).
+    const isMobilePortrait = window.matchMedia('(max-width: 479px)').matches
+    // On mobile (≤991px) the line starts drawing earlier — when its start
+    // point reaches 70% of the viewport (lower on screen) instead of center.
     const isMobile = window.matchMedia('(max-width: 991px)').matches
     const starts = document.querySelectorAll('[line-start]')
     const ends = document.querySelectorAll('[line-end]')
     console.log('[home] initGlobalLines', {
-      isMobile,
+      isMobilePortrait,
       startsFound: starts.length,
       endsFound: ends.length,
     })
@@ -50,12 +64,16 @@ export default function () {
     starts.forEach((startEl) => {
       const id = startEl.getAttribute('line-start')
       let endEl = endMap[id]
+      let usedMobileOverride = false
 
       const mobileEndSel = startEl.getAttribute('line-end-mobile')
-      if (isMobile && mobileEndSel) {
+      if (isMobilePortrait && mobileEndSel) {
         try {
           const mobileEnd = document.querySelector(mobileEndSel)
-          if (mobileEnd) endEl = mobileEnd
+          if (mobileEnd) {
+            endEl = mobileEnd
+            usedMobileOverride = true
+          }
           console.log(
             `[home] line "${id}" mobile override: "${mobileEndSel}" →`,
             mobileEnd
@@ -72,14 +90,24 @@ export default function () {
         console.warn(`[home] line "${id}" skipped — no endEl found`)
         return
       }
-      if (timelineContainer && timelineContainer.contains(endEl)) {
+      // Skip lines whose end is owned by the timeline component — but NOT when
+      // an explicit line-end-mobile override deliberately points into it (e.g.
+      // a hero→featured-grid line on mobile). The override is author intent.
+      if (
+        !usedMobileOverride &&
+        timelineContainer &&
+        timelineContainer.contains(endEl)
+      ) {
         console.log(`[home] line "${id}" skipped — endEl inside timeline`)
         return
       }
       console.log(`[home] ✏️ drawing line "${id}"`, { startEl, endEl })
 
+      // Override-driven lines end at the destination's TOP edge; normal pairs
+      // (small marker divs) end at center, which equals their top anyway.
+      const endAtTop = usedMobileOverride
       const startPos = getCenter(startEl)
-      const endPos = getCenter(endEl)
+      const endY = endAtTop ? getTopY(endEl) : getCenter(endEl).y
 
       const container = document.createElement('div')
       container.className = 'global-line'
@@ -88,7 +116,7 @@ export default function () {
         left: ${startPos.x - lineWidth / 2}px;
         top: ${startPos.y}px;
         width: ${lineWidth}px;
-        height: ${endPos.y - startPos.y}px;
+        height: ${endY - startPos.y}px;
         pointer-events: none;
         z-index: 1;
         overflow: hidden;
@@ -129,23 +157,25 @@ export default function () {
         scrollTrigger: {
           trigger: triggerEl,
           endTrigger: endEl,
-          start: 'center center',
-          end: 'center center',
+          start: isMobile ? 'center 70%' : 'center center',
+          // Match the physical end anchor: complete the draw when the
+          // destination's top (not center) reaches viewport center.
+          end: endAtTop ? 'top center' : 'center center',
           scrub: true,
         },
       })
 
-      globalLines.push({ container, line, startEl, endEl })
+      globalLines.push({ container, line, startEl, endEl, endAtTop })
     })
   }
 
   function repositionLines() {
-    globalLines.forEach(({ container, startEl, endEl }) => {
+    globalLines.forEach(({ container, startEl, endEl, endAtTop }) => {
       const startPos = getCenter(startEl)
-      const endPos = getCenter(endEl)
+      const endY = endAtTop ? getTopY(endEl) : getCenter(endEl).y
       container.style.left = `${startPos.x - lineWidth / 2}px`
       container.style.top = `${startPos.y}px`
-      container.style.height = `${endPos.y - startPos.y}px`
+      container.style.height = `${endY - startPos.y}px`
     })
     ScrollTrigger.refresh()
   }

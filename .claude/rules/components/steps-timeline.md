@@ -18,7 +18,7 @@ Inside the section, mark each card with:
 <div data-steps-timeline="item" class="steps_item">...</div>
 ```
 
-Each card should contain a `.steps-checkboxes_item-icon-wrapper` with two stacked `.steps-checkboxes_item-icon` images using `grid-area: 1 / 1`. The **second image is the OFF state** (visible by default due to DOM order). The **first image is the ON state** (hidden behind the second).
+Each card should contain a `[data-steps-timeline="icon-wrapper"]` element (typically `.steps-checkboxes_item-icon-wrapper`) with two stacked `.steps-checkboxes_item-icon` images using `grid-area: 1 / 1`. The **second image is the OFF state** (visible by default due to DOM order). The **first image is the ON state** (hidden behind the second). The line segments are horizontally centered on this icon-wrapper.
 
 ### Optional: customize the start offset
 
@@ -36,7 +36,7 @@ If `data-start-offset` is missing or non-numeric, it falls back to 200. The mobi
   1. **Line segments**: Creates N absolutely positioned 1px-wide red line divs on `document.body` (one per card):
      - **Segment 0**: From above the first card's top edge (default 200px on desktop, overridable via `data-start-offset` on the section; 32px on screens ≤767px) down to the first card's top edge.
      - **Segments 1–N-1**: From card[i-1]'s bottom edge to card[i]'s top edge (the gap between cards).
-     - X position: 40px to the right of the cards' left edge.
+     - X position: horizontal center of each card's `[data-steps-timeline="icon-wrapper"]` — recalculated per frame so the line passes exactly through the middle of the checkbox at every viewport. Segment `i` reads `iconWrappers[i]` (segment 0 → card 0's icon-wrapper, segment 1 → card 1's icon-wrapper, etc.). Falls back to `firstCard.left + 60px` if a card has no icon-wrapper.
      - Each segment draws via `scaleY 0→1` with GSAP ScrollTrigger `scrub: true`. Fully reversible on scroll back.
   2. **Drop-shadow glow**: Uses `filter: drop-shadow(0 0 100px rgba(225, 6, 0, 0.5))` to avoid interfering with the cards' existing inset `box-shadow`. Only one card glows at a time:
      - When segment 0 completes (line reaches card[0] top): shadow fades in on card[0].
@@ -57,6 +57,6 @@ If `data-start-offset` is missing or non-numeric, it falls back to 200. The mobi
 
 - One element matching `[data-component='steps-timeline']` (the section container). Optional `data-start-offset` attribute on the section overrides the desktop start offset (default 200px).
 - Any number of `[data-steps-timeline="item"]` children (`.steps-checkboxes_item` cards) inside a `.steps-checkboxes_list` flex container.
-- Each card contains a `.steps-checkboxes_item-icon-wrapper` with two `.steps-checkboxes_item-icon` images stacked via `grid-area: 1 / 1`. Second image = OFF state (visible by default), first image = ON state.
+- Each card contains a `[data-steps-timeline="icon-wrapper"]` element (typically `.steps-checkboxes_item-icon-wrapper`) with two `.steps-checkboxes_item-icon` images stacked via `grid-area: 1 / 1`. Second image = OFF state (visible by default), first image = ON state. The icon-wrapper's horizontal center drives the line's X position; if the attribute is missing on a card, the line falls back to `firstCard.left + 60px` for that segment.
 - Line segments are appended to `document.body` as absolutely positioned divs with class `global-line global-line--steps`.
 - The section gets `z-index: 2` so cards render above the lines (`z-index: 1`).

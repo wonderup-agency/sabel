@@ -11,6 +11,11 @@ import { buildLineCap } from './vertical-line.js'
 export default function (elements) {
   const capRepositioners = []
 
+  // On mobile (≤991px) the line begins drawing a touch earlier — as soon as
+  // the track enters the viewport — instead of waiting for 'top 80%'.
+  const isMobile = window.matchMedia('(max-width: 991px)').matches
+  const startPoint = isMobile ? 'top 90%' : 'top 80%'
+
   elements.forEach((el) => {
     const track = el.querySelector('[data-hero="line-track"]')
     const fill = el.querySelector('[data-hero="line-fill"]')
@@ -20,16 +25,16 @@ export default function (elements) {
 
     const st = ScrollTrigger.create({
       trigger: track,
-      start: 'top 80%',
+      start: startPoint,
       end: 'bottom 50%',
     })
 
     // Optional line caps on the track. Trigger points are aligned with the
-    // hero's own scroll range (top 80% start, bottom 50% end) so caps stay
+    // hero's own scroll range (startPoint start, bottom 50% end) so caps stay
     // in sync with when the fill begins / finishes drawing.
     if (track.getAttribute('line-cap-start') === 'True') {
       capRepositioners.push(
-        buildLineCap(track, 'down', { triggerStart: 'top 80%' })
+        buildLineCap(track, 'down', { triggerStart: startPoint })
       )
     }
     if (track.getAttribute('line-cap-end') === 'True') {
