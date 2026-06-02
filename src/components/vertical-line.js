@@ -5,88 +5,98 @@ Webflow attribute: data-component="vertical-line"
 
 import './vertical-line.css'
 
-// Width of the horizontal line in each cap. Kept here so JS can animate
-// to the resolved value and tween back to 0 cleanly.
-const LINE_CAP_WIDTH = '6rem'
+// How much of each enabled end fades out, as a % of the line's own length.
+// Percentage stops keep the fade locked to the line's real ends at any reveal
+// amount; plain numbers (no `calc()`, which some gradient parsers drop and
+// collapse into one long fade over the whole line).
+const LINE_FADE = 24
 
 /*
-  Build one cap (horizontal line + glow) at either the top or bottom edge
-  of a target element. Appends to <body>, positions absolutely at the
-  element's edge, and wires a ScrollTrigger that opens/closes the cap.
-
-  direction: 'down' → cap at TOP edge, glow points down.
-             'up'   → cap at BOTTOM edge, glow points up.
-
-  options.triggerStart overrides the default scroll trigger point so other
-  components (e.g. hero) can sync the cap with their own scroll range.
-
-  Returned reposition() should be called on resize.
+  Resolve a fill element's colour, falling back to the project red if its
+  background can't be read as a solid colour.
 */
-export function buildLineCap(verticalEl, direction, options = {}) {
-  const wrapper = document.createElement('div')
-  wrapper.className = 'global-line global-line-cap'
-  wrapper.setAttribute('data-cap-direction', direction)
+function resolveLineColor(fillEl) {
+  const bg = getComputedStyle(fillEl).backgroundColor
+  if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return bg
+  return 'var(--base--red, #e10600)'
+}
 
-  const line = document.createElement('div')
-  line.className = 'global-line-cap_line'
+/*
+  Build a fill background: a solid colour, or — when an end fades — a vertical
+  gradient that's solid in the middle and transparent at the faded end(s).
 
-  const glow = document.createElement('div')
-  glow.className = 'global-line-cap_glow'
+  The fade lives in the BACKGROUND (not a CSS mask) so there's no WebKit
+  mask-repaint flicker, and it's baked at the fill's FULL length so the
+  transparent zones stay locked to the line's real ends.
 
-  wrapper.appendChild(line)
-  wrapper.appendChild(glow)
-  document.body.appendChild(wrapper)
+  start: fade the top end.  end: fade the bottom end.
+*/
+function buildFillBackground(color, { start = false, end = false } = {}) {
+  if (!start && !end) return color
 
-  gsap.set(wrapper, { xPercent: -50, yPercent: -50 })
+  const stops = []
+  stops.push(start ? 'transparent 0' : `${color} 0`)
+  if (start) stops.push(`${color} ${LINE_FADE}%`)
+  if (end) stops.push(`${color} ${100 - LINE_FADE}%`)
+  stops.push(end ? 'transparent 100%' : `${color} 100%`)
 
-  // Use offsetHeight (CSS-defined size) for the bottom edge, because the
-  // line's scaleY transform collapses getBoundingClientRect.bottom to top.
-  const reposition = () => {
-    const rect = verticalEl.getBoundingClientRect()
-    const x = rect.left + rect.width / 2 + window.scrollX
-    const y =
-      (direction === 'down' ? rect.top : rect.top + verticalEl.offsetHeight) +
-      window.scrollY
-    wrapper.style.left = `${x}px`
-    wrapper.style.top = `${y}px`
-  }
-  reposition()
+  return `linear-gradient(180deg, ${stops.join(', ')})`
+}
 
-  // Trigger MUST match the host line's scrub range so the cap never lags
-  // behind the visible line. Default matches vertical-line's range; host
-  // components can override via options.triggerStart.
-  const defaultStart = direction === 'down' ? 'top 80%' : 'bottom 20%'
-  ScrollTrigger.create({
-    trigger: verticalEl,
-    start: options.triggerStart || defaultStart,
-    onEnter: () => {
-      gsap.to(line, {
-        width: LINE_CAP_WIDTH,
-        duration: 0.6,
-        ease: 'power3.out',
-      })
-      gsap.to(glow, { opacity: 1, duration: 0.6, ease: 'power3.out' })
-    },
-    onLeaveBack: () => {
-      gsap.to(line, { width: 0, duration: 0.4, ease: 'power2.in' })
-      gsap.to(glow, { opacity: 0, duration: 0.4, ease: 'power2.in' })
-    },
-  })
+/*
+  Prepare a line's fill element for a clip-path reveal with optional end fades.
 
-  return reposition
+  Operates on the EXISTING fill element (e.g. [data-vertical-line="fill"] or
+  [data-hero="line-fill"]) — it does NOT create a new node, so it never
+  duplicates a line that already has its own fill in the Webflow markup.
+
+  The fade gradient is baked into the fill at full length and the fill starts
+  fully clipped. The caller reveals it top→bottom via setLineReveal(); the clip
+  edge is hard, so while the line fills you only see a solid leading edge and
+  the fade shows up only once the reveal reaches each extreme.
+
+  fade.start: fade the top end.  fade.end: fade the bottom end.
+*/
+export function prepareLineFill(fillEl, fade = {}) {
+  const color = resolveLineColor(fillEl)
+  fillEl.style.background = buildFillBackground(color, fade)
+
+  // Neutralise any Webflow scaleY(0) starting state (via GSAP, so a
+  // positioning translate is preserved) — the reveal is done by clip, not
+  // scale, and the fill must render at full height for the fade ends to land
+  // on the real ends.
+  gsap.set(fillEl, { scaleY: 1 })
+  fillEl.style.clipPath = 'inset(0 0 100% 0)' // start fully clipped (hidden)
+}
+
+/*
+  Reveal a fill from the top down to `progress` (0 = hidden, 1 = full) by
+  clipping off the bottom with a hard edge.
+*/
+export function setLineReveal(fillEl, progress) {
+  const clipped = (1 - progress) * 100
+  fillEl.style.clipPath = `inset(0 0 ${clipped}% 0)`
 }
 
 /**
  * @param {HTMLElement[]} elements - All elements matching [data-component='vertical-line']
  */
 export default function (elements) {
-  const repositioners = []
-
   elements.forEach((el) => {
-    gsap.set(el, { scaleY: 0, transformOrigin: 'top center' })
+    // Use the line's own fill child if present; otherwise treat the element
+    // itself as the fill.
+    const fill = el.querySelector('[data-vertical-line="fill"]') || el
 
-    gsap.to(el, {
-      scaleY: 1,
+    prepareLineFill(fill, {
+      start: el.getAttribute('line-cap-start') === 'True',
+      end: el.getAttribute('line-cap-end') === 'True',
+    })
+
+    // Drive the clip reveal off a proxy so we don't depend on GSAP
+    // interpolating clip-path strings directly.
+    const state = { progress: 0 }
+    gsap.to(state, {
+      progress: 1,
       ease: 'none',
       scrollTrigger: {
         trigger: el,
@@ -94,20 +104,7 @@ export default function (elements) {
         end: 'bottom 20%',
         scrub: true,
       },
+      onUpdate: () => setLineReveal(fill, state.progress),
     })
-
-    if (el.getAttribute('line-cap-start') === 'True') {
-      repositioners.push(buildLineCap(el, 'down'))
-    }
-    if (el.getAttribute('line-cap-end') === 'True') {
-      repositioners.push(buildLineCap(el, 'up'))
-    }
   })
-
-  return {
-    resize() {
-      repositioners.forEach((fn) => fn())
-      ScrollTrigger.refresh()
-    },
-  }
 }

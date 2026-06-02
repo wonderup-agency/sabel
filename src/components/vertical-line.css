@@ -1,53 +1,9 @@
 /*
-Line caps for vertical-line — horizontal accents at the top/bottom edge
-of any [data-component='vertical-line'] that opts in via line-cap-start
-/ line-cap-end. Created at runtime and appended to <body> so they're not
-clipped by parent overflow.
+vertical-line — line-end fades.
+
+The old horizontal "line cap" accents (a red gradient line + glow appended to
+<body>) were removed. Lines now dissolve into the background at their start /
+end via a gradient baked into the fill's background (see buildScalableInner in
+vertical-line.js) — no dedicated CSS is needed here. This file is kept as the
+component's CSS entry point in case scoped styles are added later.
 */
-
-.global-line-cap {
-  position: absolute;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.global-line-cap_line {
-  display: block;
-  width: 0;
-  height: 1px;
-  background-image: linear-gradient(
-    90deg,
-    var(--base--black, #0b0b0c),
-    var(--base--red, #e10600) 50%,
-    var(--base--black, #0b0b0c)
-  );
-}
-
-.global-line-cap_glow {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2rem;
-  height: 2rem;
-  filter: blur(12px);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.global-line-cap[data-cap-direction='down'] .global-line-cap_glow {
-  top: 100%;
-  background-image: radial-gradient(
-    ellipse 100% 100% at 50% 0%,
-    var(--base--red, #e10600) 0%,
-    rgba(225, 6, 0, 0) 70%
-  );
-}
-
-.global-line-cap[data-cap-direction='up'] .global-line-cap_glow {
-  bottom: 100%;
-  background-image: radial-gradient(
-    ellipse 100% 100% at 50% 100%,
-    var(--base--red, #e10600) 0%,
-    rgba(225, 6, 0, 0) 70%
-  );
-}

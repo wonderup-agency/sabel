@@ -27,12 +27,22 @@ export default function (elements) {
       repeat: -1,
     })
 
-    tweens.push({ el, tween, lists })
+    tweens.push({ el, tween, lists, width: el.offsetWidth })
   })
 
   return {
     resize() {
-      tweens.forEach(({ el, tween, lists }) => {
+      tweens.forEach((entry) => {
+        const { el, tween, lists } = entry
+
+        // Mobile browsers fire `resize` on every address-bar show/hide while
+        // scrolling — but that only changes viewport height. The marquee only
+        // depends on width, so skip the rebuild when width is unchanged.
+        // Otherwise the tween resets to x:0 on every scroll (visible jump).
+        const currentWidth = el.offsetWidth
+        if (currentWidth === entry.width) return
+        entry.width = currentWidth
+
         tween.kill()
 
         const listWidth = lists[0].offsetWidth
@@ -42,19 +52,12 @@ export default function (elements) {
 
         gsap.set(lists, { x: 0 })
 
-        const newTween = gsap.to(lists, {
+        entry.tween = gsap.to(lists, {
           x: -totalWidth,
           duration,
           ease: 'none',
           repeat: -1,
         })
-
-        // Update reference for future resizes
-        tweens.splice(
-          tweens.findIndex((t) => t.el === el),
-          1,
-          { el, tween: newTween, lists }
-        )
       })
     },
   }

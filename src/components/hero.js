@@ -3,14 +3,12 @@ Component: hero
 Webflow attribute: data-component="hero"
 */
 
-import { buildLineCap } from './vertical-line.js'
+import { prepareLineFill, setLineReveal } from './vertical-line.js'
 
 /**
  * @param {HTMLElement[]} elements - All elements matching [data-component='hero']
  */
 export default function (elements) {
-  const capRepositioners = []
-
   // On mobile (≤991px) the line begins drawing a touch earlier — as soon as
   // the track enters the viewport — instead of waiting for 'top 80%'.
   const isMobile = window.matchMedia('(max-width: 991px)').matches
@@ -21,27 +19,19 @@ export default function (elements) {
     const fill = el.querySelector('[data-hero="line-fill"]')
     if (!track || !fill) return
 
-    gsap.set(fill, { scaleY: 0, transformOrigin: 'top center' })
+    // Bake optional end fades into the fill and reveal it via clip. Same
+    // opt-in attributes as before (line-cap-start / line-cap-end), read from
+    // the track. No injected node, no CSS mask.
+    prepareLineFill(fill, {
+      start: track.getAttribute('line-cap-start') === 'True',
+      end: track.getAttribute('line-cap-end') === 'True',
+    })
 
     const st = ScrollTrigger.create({
       trigger: track,
       start: startPoint,
       end: 'bottom 50%',
     })
-
-    // Optional line caps on the track. Trigger points are aligned with the
-    // hero's own scroll range (startPoint start, bottom 50% end) so caps stay
-    // in sync with when the fill begins / finishes drawing.
-    if (track.getAttribute('line-cap-start') === 'True') {
-      capRepositioners.push(
-        buildLineCap(track, 'down', { triggerStart: startPoint })
-      )
-    }
-    if (track.getAttribute('line-cap-end') === 'True') {
-      capRepositioners.push(
-        buildLineCap(track, 'up', { triggerStart: 'bottom 50%' })
-      )
-    }
 
     // Gate the scale tracking until the track's opacity transition completes
     // the first time. Once activated, stays activated — the fill will scale
@@ -82,13 +72,12 @@ export default function (elements) {
       const diff = target - current
       if (Math.abs(diff) < 0.0001) return
       current += diff * 0.08
-      gsap.set(fill, { scaleY: current })
+      setLineReveal(fill, current)
     })
   })
 
   return {
     resize() {
-      capRepositioners.forEach((fn) => fn())
       ScrollTrigger.refresh()
     },
   }
