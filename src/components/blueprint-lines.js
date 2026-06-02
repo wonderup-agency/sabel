@@ -84,24 +84,32 @@ function initDesktop(svg, cards) {
     path.style.strokeDashoffset = length
   })
 
-  // Read starting Y of the first M command in `d` to classify paths.
+  // Read start point + end X of each path to classify them.
   const getStartY = (p) => {
     const m = p.getAttribute('d').match(/^M\s*[-\d.]+[\s,]+([-\d.]+)/)
     return m ? parseFloat(m[1]) : Infinity
   }
+  const getStartX = (p) => {
+    const m = p.getAttribute('d').match(/^M\s*([-\d.]+)/)
+    return m ? parseFloat(m[1]) : 0
+  }
   const getEndX = (p) => p.getPointAtLength(p.getTotalLength()).x
+  // A path with no horizontal travel is a vertical trunk segment, not a branch.
+  const isVertical = (p) => Math.abs(getEndX(p) - getStartX(p)) < 5
 
-  // Lowest starting Y = trunk-top. If there are 3+ distinct starting Ys, the
-  // highest = trunk-bottom; otherwise no trunk-bottom phase. The rest = branches
-  // (sorted left-to-right by end X).
+  // Lowest starting Y = trunk-top. Of the remaining paths, the vertical one(s)
+  // are the trunk-bottom (the centre line continuing straight down) and the rest
+  // are the side branches (sorted left-to-right by end X). Drawing trunk-bottom
+  // in its own later phase means the centre line only starts growing once the
+  // side branches have fanned out and begun dropping.
   const sortedByY = [...allPaths].sort((a, b) => getStartY(a) - getStartY(b))
-  const distinctYs = [...new Set(sortedByY.map(getStartY))]
   const trunkTop = sortedByY[0]
-  const hasTrunkBottom = distinctYs.length >= 3
-  const trunkBottom = hasTrunkBottom ? sortedByY[sortedByY.length - 1] : null
-  const branchPaths = (
-    hasTrunkBottom ? sortedByY.slice(1, -1) : sortedByY.slice(1)
-  ).sort((a, b) => getEndX(a) - getEndX(b))
+  const rest = sortedByY.slice(1)
+  const branchPaths = rest
+    .filter((p) => !isVertical(p))
+    .sort((a, b) => getEndX(a) - getEndX(b))
+  const trunkBottomPaths = rest.filter((p) => isVertical(p))
+  const hasTrunkBottom = trunkBottomPaths.length > 0
 
   if (!branchPaths.length) return
 
@@ -122,8 +130,11 @@ function initDesktop(svg, cards) {
   const trunkTopDur = 0.5
   const branchDur = 0.3
   const trunkBottomDur = 0.2
+  // Overlap the centre line into the tail of the branch draw, so it starts
+  // growing while the side branches are dropping rather than only after.
+  const trunkBottomOverlap = 0.15
   const branchStart = trunkTopDur
-  const trunkBottomStart = branchStart + branchDur
+  const trunkBottomStart = branchStart + branchDur - trunkBottomOverlap
   const totalDuration = hasTrunkBottom
     ? trunkBottomStart + trunkBottomDur
     : branchStart + branchDur
@@ -177,11 +188,11 @@ function initDesktop(svg, cards) {
     )
   })
 
-  if (trunkBottom) {
+  trunkBottomPaths.forEach((path) => {
     tl.to(
-      trunkBottom,
+      path,
       { strokeDashoffset: 0, duration: trunkBottomDur, ease: 'none' },
       trunkBottomStart
     )
-  }
+  })
 }
