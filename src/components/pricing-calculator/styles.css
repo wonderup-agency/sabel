@@ -124,6 +124,11 @@
   padding: 0;
   box-shadow: none;
 }
+@media (min-width: 62rem) {
+  [data-component='pricing-calculator'] .pc-zone-builder {
+    margin-top: 3.5rem;
+  }
+}
 
 /* Section labels (mono red, underlined) */
 [data-component='pricing-calculator'] .pc-section-label {
