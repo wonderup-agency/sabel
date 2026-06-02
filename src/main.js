@@ -45,7 +45,7 @@ window.addEventListener('resize', () => {
     if (typeof hooks.resize === 'function') hooks.resize()
   })
 })
-document.addEventListener('DOMContentLoaded', async () => {
+async function init() {
   try {
     const module = await import('./components/global.js')
     if (typeof module.default === 'function') {
@@ -68,4 +68,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     )
   }
   await Promise.all(components.map(loadComponent))
-})
+}
+
+// As a dynamically-injected ES module loaded from the CDN, main.js can execute
+// either before OR after DOMContentLoaded depending on network speed. Registering
+// a DOMContentLoaded listener after the event already fired means it never runs —
+// that's why "sometimes" no JS loads at all. Guard on readyState instead.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init)
+} else {
+  init()
+}
