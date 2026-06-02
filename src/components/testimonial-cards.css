@@ -1,3 +1,22 @@
+/* Red accent (left border) only on the active card. */
+[data-component='testimonial-cards'] .swiper-slide {
+  transition: border-left-color 0.4s ease;
+}
+
 [data-component='testimonial-cards'] .swiper-slide:not(.swiper-slide-active) {
   border-left-color: transparent;
+}
+
+/* The shared red top gradient lives on `::before` (the same rule also styles
+   .featured-card_button, .steps_item, .scroll-tabs_panels_card, etc.). In the
+   testimonials deck it should only show on the active card — fade it out on
+   the cards stacked behind so they stay flat/dark. Scoped to this component so
+   the other components' `::before` are untouched. */
+[data-component='testimonial-cards'] .swiper-slide::before {
+  transition: opacity 0.4s ease;
+}
+
+[data-component='testimonial-cards']
+  .swiper-slide:not(.swiper-slide-active)::before {
+  opacity: 0;
 }

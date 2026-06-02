@@ -4,9 +4,9 @@ Webflow attribute: data-component="testimonial-cards"
 */
 
 import Swiper from 'swiper'
-import { EffectCreative, A11y } from 'swiper/modules'
+import { EffectCards, Autoplay, A11y } from 'swiper/modules'
 import 'swiper/css'
-import 'swiper/css/effect-creative'
+import 'swiper/css/effect-cards'
 import './testimonial-cards.css'
 
 // Force every slide to the height of the tallest one so the stacked cards
@@ -36,30 +36,28 @@ export default function (elements) {
     equalizeHeights(slides)
 
     const swiper = new Swiper(wrapper, {
-      modules: [EffectCreative, A11y],
-      effect: 'creative',
-      creativeEffect: {
-        // Active card sits at rest (rightmost, fully visible). Every inactive
-        // card behind it shifts left and scales down — the further back it is,
-        // the more it shrinks (translate/scale grow linearly with position).
-        limitProgress: 2, // active + 2 cards behind visible
-        prev: {
-          translate: [40, 0, 0],
-          scale: 0.9,
-          origin: 'center center',
-        },
-        next: {
-          translate: [40, 0, 0],
-          scale: 0.9,
-          origin: 'center center',
-        },
+      modules: [EffectCards, Autoplay, A11y],
+      effect: 'cards',
+      // Kept close to Swiper's default cards demo so drag feels natural.
+      // Only deviation: rotation off (the fan tilt) so the stack stays on a
+      // straight horizontal baseline, and shadows off (cards are already dark).
+      cardsEffect: {
+        rotate: false,
+        slideShadows: false,
+        perSlideOffset: 16, // px each card behind peeks out (default 8)
       },
-      loop: true,
+      loop: false,
       grabCursor: true,
-      speed: 800,
+      // Cycles on its own; keeps going after a manual click/drag.
       a11y: {
         enabled: true,
       },
+    })
+
+    // Tap anywhere on the deck advances to the next card. `allowClick` is
+    // false right after a drag, so a swipe never counts as a click.
+    swiper.on('click', (s) => {
+      if (s.allowClick) s.slideNext()
     })
 
     instances.push({ swiper, slides })
