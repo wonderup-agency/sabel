@@ -30,9 +30,22 @@ export default function (elements) {
   const instances = []
 
   elements.forEach((wrapper) => {
-    const slides = Array.from(wrapper.querySelectorAll('.swiper-slide'))
-    if (slides.length < 2) return
+    const originals = Array.from(wrapper.querySelectorAll('.swiper-slide'))
+    if (originals.length < 2) return
 
+    // The cards effect needs `slides.length >= slidesPerView + loopedSlides * 2`
+    // for loop mode (Swiper's loopFix check). With only a handful of CMS
+    // testimonials the loop stalls — it advances a slide or two, then snaps
+    // back to the start. Duplicate the whole slide set (preserving order) until
+    // there are enough for a smooth, continuous loop. Cloning before init means
+    // Swiper indexes the duplicates itself as ordinary slides.
+    const MIN_LOOP_SLIDES = 6
+    const track = originals[0].parentElement
+    while (track.querySelectorAll('.swiper-slide').length < MIN_LOOP_SLIDES) {
+      originals.forEach((slide) => track.appendChild(slide.cloneNode(true)))
+    }
+
+    const slides = Array.from(wrapper.querySelectorAll('.swiper-slide'))
     equalizeHeights(slides)
 
     const swiper = new Swiper(wrapper, {
@@ -47,6 +60,7 @@ export default function (elements) {
         perSlideOffset: 16, // px each card behind peeks out (default 8)
       },
       loop: true,
+      speed: 600,
       grabCursor: true,
       // Cycles on its own; keeps going after a manual click/drag.
       autoplay: {

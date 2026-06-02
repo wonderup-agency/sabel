@@ -1,6 +1,11 @@
-/* Red accent (left border) only on the active card. */
+/* Red accent (left border) only on the active card.
+   IMPORTANT: include `transform` in the transition-property. The cards effect
+   animates each slide via `transform` and only sets `transition-duration`
+   inline on the slide — if the property list is narrowed to border-left-color,
+   the transform stops transitioning and slide changes snap instantly. */
 [data-component='testimonial-cards'] .swiper-slide {
-  transition: border-left-color 0.4s ease;
+  transition-property: transform, border-left-color;
+  transition-timing-function: ease;
 }
 
 [data-component='testimonial-cards'] .swiper-slide:not(.swiper-slide-active) {
