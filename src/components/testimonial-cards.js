@@ -46,9 +46,14 @@ export default function (elements) {
         slideShadows: false,
         perSlideOffset: 16, // px each card behind peeks out (default 8)
       },
-      loop: false,
+      loop: true,
       grabCursor: true,
       // Cycles on its own; keeps going after a manual click/drag.
+      autoplay: {
+        delay: 5000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true,
+      },
       a11y: {
         enabled: true,
       },
@@ -60,13 +65,14 @@ export default function (elements) {
       if (s.allowClick) s.slideNext()
     })
 
-    instances.push({ swiper, slides })
+    instances.push({ swiper, wrapper })
   })
 
   return {
     resize() {
-      instances.forEach(({ swiper, slides }) => {
-        equalizeHeights(slides)
+      instances.forEach(({ swiper, wrapper }) => {
+        // Re-query so loop-generated duplicate slides are equalized too.
+        equalizeHeights(Array.from(wrapper.querySelectorAll('.swiper-slide')))
         swiper.update()
       })
     },
