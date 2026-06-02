@@ -3,6 +3,8 @@ Component: services-timeline
 Webflow attribute: data-component="services-timeline"
 */
 
+import { drawLine, readCaps, fadeSvgPathStart } from './line-caps.js'
+
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
 const LINE_BG_COLOR = 'var(--base--grey-2, #4c6280)'
@@ -29,6 +31,13 @@ export default function (elements) {
       ...el.querySelectorAll('.services_timeline_item-header-icon'),
     ]
     if (!icons.length) return
+
+    // Opt-in end fades — only the global ends fade, only the red fill; grey
+    // tracks stay full-height. The SVG connector is the true top of the whole
+    // line (it sits above the first icon), so a start cap fades the connector,
+    // not the first div bridge. The end cap fades the bottom of the last bridge.
+    const caps = readCaps(el)
+    let hasConnector = false
 
     const cs = getComputedStyle(icons[0])
     const iconInactiveColor =
@@ -109,6 +118,11 @@ export default function (elements) {
 
         path.setAttribute('mask', `url(#${maskId})`)
 
+        // Start cap fades the top of the connector (the global top of the line).
+        // The mask gates visibility; the gradient stroke fades the painted edge.
+        hasConnector = true
+        if (caps.start) fadeSvgPathStart(path)
+
         gsap.to(maskPath, {
           strokeDashoffset: 0,
           ease: 'none',
@@ -167,9 +181,13 @@ export default function (elements) {
 
       const bulletIndex = i + 1
 
-      gsap.to(redLine, {
-        scaleY: 1,
-        ease: 'none',
+      drawLine(redLine, {
+        fade: {
+          // First bridge only takes the start cap when there's no connector
+          // above it (the connector is otherwise the global top).
+          start: caps.start && !hasConnector && i === 0,
+          end: caps.end && i === icons.length - 2,
+        },
         scrollTrigger: {
           trigger: startItem,
           start: 'top center',

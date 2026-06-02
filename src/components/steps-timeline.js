@@ -3,6 +3,8 @@ Component: steps-timeline
 Webflow attribute: data-component="steps-timeline"
 */
 
+import { drawLine, readCaps } from './line-caps.js'
+
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
 const LINE_X_OFFSET = 60
@@ -35,7 +37,11 @@ export default function (elements) {
 
     const items = [...section.querySelectorAll('[data-steps-timeline="item"]')]
     if (!items.length) return
-    console.log('test')
+
+    // Opt-in end fades: only the global ends of the whole line fade — the top
+    // of the first segment and the bottom of the last. Intermediate segments
+    // stay solid. (Single-segment sections take both caps.)
+    const caps = readCaps(section)
     const iconWrappers = items.map((item) =>
       item.querySelector('[data-steps-timeline="icon-wrapper"]')
     )
@@ -164,9 +170,11 @@ export default function (elements) {
         stConfig.end = 'top 60%'
       }
 
-      gsap.to(lineEl, {
-        scaleY: 1,
-        ease: 'none',
+      drawLine(lineEl, {
+        fade: {
+          start: caps.start && i === 0,
+          end: caps.end && i === items.length - 1,
+        },
         scrollTrigger: stConfig,
       })
 

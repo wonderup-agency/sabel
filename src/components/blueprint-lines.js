@@ -9,6 +9,7 @@ and all 6 cards are revealed together with stagger.
 */
 
 import './blueprint-lines.css'
+import { readCaps, fadeSvgPathStart } from './line-caps.js'
 
 const DESKTOP_MQ = '(min-width: 992px)'
 const REDUCED_MOTION_MQ = '(prefers-reduced-motion: reduce)'
@@ -36,7 +37,10 @@ export default function (elements) {
     }
 
     if (!svg) return
-    initDesktop(svg, cards)
+    // Opt-in start cap (line-cap-start="True" on the section or the SVG): fade
+    // the top of the trunk. Branches stay solid.
+    const capStart = readCaps(section).start || readCaps(svg).start
+    initDesktop(svg, cards, capStart)
   })
 
   return {
@@ -74,7 +78,7 @@ function initMobile(section, cards) {
   })
 }
 
-function initDesktop(svg, cards) {
+function initDesktop(svg, cards, capStart) {
   const allPaths = [...svg.querySelectorAll('[data-line="branch"]')]
   if (allPaths.length < 2) return
 
@@ -104,6 +108,7 @@ function initDesktop(svg, cards) {
   // side branches have fanned out and begun dropping.
   const sortedByY = [...allPaths].sort((a, b) => getStartY(a) - getStartY(b))
   const trunkTop = sortedByY[0]
+  if (capStart) fadeSvgPathStart(trunkTop)
   const rest = sortedByY.slice(1)
   const branchPaths = rest
     .filter((p) => !isVertical(p))

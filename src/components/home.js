@@ -3,6 +3,8 @@ Component: home
 Webflow attribute: data-component="home"
 */
 
+import { drawLine, readCaps, fadeSvgPathStart } from './line-caps.js'
+
 /**
  * @param {HTMLElement[]} elements - All elements matching [data-component='home']
  */
@@ -151,9 +153,11 @@ export default function () {
         ? document.querySelector(triggerSel)
         : startEl
 
-      gsap.to(line, {
-        scaleY: 1,
-        ease: 'none',
+      // Opt-in end fades (line-cap-start / line-cap-end on the line-start
+      // element). A single global line spans start→end, so both caps apply to
+      // this one fill. Lines without the attribute keep the plain scaleY draw.
+      drawLine(line, {
+        fade: readCaps(startEl),
         scrollTrigger: {
           trigger: triggerEl,
           endTrigger: endEl,
@@ -303,6 +307,11 @@ export default function () {
       const m = p.getAttribute('d').match(/^M[\d.]+ ([\d.]+)/)
       return m && parseFloat(m[1]) < 1
     })
+
+    // Opt-in start cap (line-cap-start="True" on the [data-animate="lines-section"]
+    // SVG): fade the top of the trunk. Branch tips stay solid. Independent of
+    // the draw animation below.
+    if (mainPath && readCaps(branchSection).start) fadeSvgPathStart(mainPath)
 
     // Branch paths sorted left-to-right by their end X position
     const branchPaths = allPaths

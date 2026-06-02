@@ -3,6 +3,8 @@ Component: timeline
 Webflow attribute: data-component="timeline"
 */
 
+import { drawLine, readCaps } from './line-caps.js'
+
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
 const LINE_BG_COLOR = 'var(--base--grey-2, #4c6280)'
@@ -36,6 +38,15 @@ export default function (elements) {
 
     const icons = [...container.querySelectorAll('.featured-card_nav_icon')]
     if (!icons.length) return
+
+    // Opt-in end fades — only the global ends of the whole line fade and only
+    // the red fill (grey tracks stay full-height). The topmost red line is the
+    // first bridge (grid→icon[0]) when a grid exists, else the first dot-to-dot
+    // bridge; the bottommost is the last dot-to-dot bridge. `grid` is queried
+    // here (before the bridge loop) so we know whether the start cap belongs to
+    // the first bridge or to dot-bridge[0].
+    const caps = readCaps(container)
+    const grid = container.querySelector('.featured-cards_grid')
 
     const cs = getComputedStyle(icons[0])
     const iconInactiveColor =
@@ -182,9 +193,13 @@ export default function (elements) {
       lineContainer.appendChild(line)
       document.body.appendChild(lineContainer)
 
-      gsap.to(line, {
-        scaleY: 1,
-        ease: 'none',
+      drawLine(line, {
+        // start cap goes to dot-bridge[0] only when there's no first bridge
+        // (no grid) to take it; end cap goes to the last dot-to-dot bridge.
+        fade: {
+          start: caps.start && !grid && i === 0,
+          end: caps.end && i === icons.length - 2,
+        },
         scrollTrigger: {
           trigger: startWrapper,
           start: BRIDGE_START_AT,
@@ -218,7 +233,6 @@ export default function (elements) {
     // After the grey track is fully drawn (~20% of scrub), the red just
     // fills inside it normally, matching the rest of the bridges.
     // -----------------------------------------------------------------
-    const grid = container.querySelector('.featured-cards_grid')
     const firstIconWrapper = icons[0].closest('.featured-card_nav-wrapper')
     if (grid && firstIconWrapper) {
       const lineContainer = document.createElement('div')
@@ -292,10 +306,14 @@ export default function (elements) {
 
       // Red line — scrubs with scroll across the same range as before, so
       // it tracks the user's scroll position linearly and reaches 100%
-      // exactly when icon[0] activates.
-      gsap.to(line, {
-        scaleY: 1,
-        ease: 'none',
+      // exactly when icon[0] activates. As the topmost line it owns the start
+      // cap; it also owns the end cap only when it's the single line (one icon,
+      // so no dot-to-dot bridges exist below it).
+      drawLine(line, {
+        fade: {
+          start: caps.start,
+          end: caps.end && icons.length === 1,
+        },
         scrollTrigger: {
           trigger: grid,
           start: 'bottom 50%',

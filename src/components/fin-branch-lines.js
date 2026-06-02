@@ -9,6 +9,8 @@ hardcoding y < 1. Queries are scoped to the section so this never touches
 the homepage section animated by home.js.
 */
 
+import { readCaps, fadeSvgPathStart } from './line-caps.js'
+
 /**
  * @param {HTMLElement[]} elements - All elements matching [data-component='fin-branch-lines']
  */
@@ -63,6 +65,12 @@ export default function (elements) {
       (best, p) => (getStartY(p) < getStartY(best) ? p : best),
       allPaths[0]
     )
+
+    // Opt-in start cap: line-cap-start="True" on the section (or the
+    // [data-animate="lines-section"] SVG) fades the top of the trunk. Branch
+    // tips stay solid. Independent of the draw animation below.
+    if (readCaps(section).start || readCaps(svg).start)
+      fadeSvgPathStart(mainPath)
 
     // Branch paths sorted left-to-right by their end X position
     const branchPaths = allPaths

@@ -3,7 +3,7 @@ Component: hero
 Webflow attribute: data-component="hero"
 */
 
-import { prepareLineFill, setLineReveal } from './vertical-line.js'
+import { prepareLineFill, setLineReveal, readCaps } from './line-caps.js'
 
 /**
  * @param {HTMLElement[]} elements - All elements matching [data-component='hero']
@@ -22,10 +22,7 @@ export default function (elements) {
     // Bake optional end fades into the fill and reveal it via clip. Same
     // opt-in attributes as before (line-cap-start / line-cap-end), read from
     // the track. No injected node, no CSS mask.
-    prepareLineFill(fill, {
-      start: track.getAttribute('line-cap-start') === 'True',
-      end: track.getAttribute('line-cap-end') === 'True',
-    })
+    prepareLineFill(fill, readCaps(track))
 
     const st = ScrollTrigger.create({
       trigger: track,
