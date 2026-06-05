@@ -82,6 +82,13 @@ function applyNoise(element) {
  * @param {HTMLElement[]} elements - All elements matching [data-component='noise-effect']
  */
 export default function (elements) {
+  // Disabled on tablet/mobile (≤991px). The overlay uses mix-blend-mode: screen
+  // plus an infinite background-position animation, which forces the browser to
+  // re-blend and repaint the layer against everything beneath it on every frame.
+  // On mobile GPUs this saturates the compositor and causes uniform scroll
+  // stutter across the whole page. The grain is decorative — not worth it there.
+  if (window.matchMedia('(max-width: 991px)').matches) return
+
   noiseDataUrl = generateNoiseTexture()
   injectKeyframes()
 

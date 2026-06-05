@@ -40,6 +40,12 @@ export default function () {
     window.addEventListener('scroll', updateGlobalLinesVisibility, {
       passive: true,
     })
+    // Debug: Lenis is intentionally OFF here. Inspect via window.__lenis (null).
+    window.__lenis = null
+    console.log(
+      `%c🐌 [global.js] Lenis OFF — native scroll (viewport ≤${MOBILE_BREAKPOINT}px)`,
+      'color: #fbbf24; font-weight: bold'
+    )
     return
   }
 
@@ -47,6 +53,15 @@ export default function () {
 
   const lenis = new Lenis({ autoRaf: false })
   lenisInstance = lenis
+
+  // Debug: expose the live instance on window and log that Lenis is active.
+  // Inspect from devtools via window.__lenis (the instance) or call getLenis().
+  window.__lenis = lenis
+  console.log(
+    `%c🐌 [global.js] Lenis ON — smooth scroll (viewport >${MOBILE_BREAKPOINT}px)`,
+    'color: #4ade80; font-weight: bold',
+    lenis
+  )
 
   // Keep ScrollTrigger in sync with Lenis scroll position
   lenis.on('scroll', ScrollTrigger.update)

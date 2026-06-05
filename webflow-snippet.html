@@ -6,10 +6,21 @@ An inline script checks localStorage and loads either:
   - CDN (production, default)
   - localhost:8080 (dev mode)
 
-Toggle dev mode from browser devtools console:
-  Enable:  localStorage.dev = '1'
-  Disable: delete localStorage.dev
-https://supabase.com/
+Toggle dev mode:
+  Shortcut: press Shift+D to toggle on/off (reloads the page)
+            — only works on Webflow staging (*.webflow.io), not the live domain
+  Console:  localStorage.dev = '1' to enable, delete localStorage.dev to disable
+
+Mobile / remote-device dev:
+  127.0.0.1 won't work on a phone (it points at the phone itself, and Safari
+  blocks http-on-https). Instead:
+    1. Start the Cloudflare tunnel (dashboard → Utilities → Tunnel) to get an
+       https URL like https://<name>.trycloudflare.com
+    2. On the device console (Safari remote inspector), set:
+         localStorage.devUrl = 'https://<name>.trycloudflare.com'
+         localStorage.dev = '1'
+       then reload. Clear with: delete localStorage.devUrl
+
 Setup:
   Assets are always served from the latest @main branch via jsDelivr.
   Note: jsDelivr aggressively caches @main — changes may take time to
@@ -34,7 +45,15 @@ Setup:
   ;(function () {
     var dev = localStorage.dev
     var cdn = 'https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist'
-    var base = dev ? 'http://127.0.0.1:8080' : cdn
+
+    // Dev origin. Desktop dev defaults to localhost (Chrome treats 127.0.0.1 as
+    // a secure context, so http works even on an https page). Mobile/remote dev
+    // CANNOT use 127.0.0.1 — on a phone that's the phone itself, and Safari
+    // blocks http-on-https anyway. For those, run the Cloudflare tunnel and set
+    //   localStorage.devUrl = 'https://<your-tunnel>.trycloudflare.com'
+    // so the device loads from an https URL it can actually reach.
+    var devBase = localStorage.devUrl || 'http://127.0.0.1:8080'
+    var base = dev ? devBase : cdn
 
     var link = document.createElement('link')
     link.rel = 'stylesheet'
@@ -50,6 +69,23 @@ Setup:
     // Expose base URL so per-page bundle snippets reuse the same decision
     window.__devBase = base
 
+    // Toggle dev mode with Shift+D — only on Webflow staging (*.webflow.io),
+    // never on the live production domain. Ignored while typing in a field.
+    if (/(^|\.)webflow\.io$/.test(location.hostname)) {
+      document.addEventListener('keydown', function (e) {
+        if (!e.shiftKey || e.key !== 'D' || e.repeat) return
+        var el = e.target
+        if (
+          el &&
+          (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))
+        )
+          return
+        if (localStorage.dev) delete localStorage.dev
+        else localStorage.dev = '1'
+        location.reload()
+      })
+    }
+
     // Auto-reload when localStorage.dev is set or cleared from devtools
     setInterval(function () {
       if (!!localStorage.dev !== !!dev) location.reload()
@@ -63,7 +99,7 @@ Setup:
         document.head.appendChild(s)
 
         var btn = document.createElement('button')
-        btn.title = 'Exit dev mode'
+        btn.title = 'Exit dev mode (Shift+D)'
         btn.innerHTML =
           '<span style="width:6px;height:6px;border-radius:50%;background:#4ade80;' +
           'animation:dev-dot 1.5s ease-in-out infinite;flex-shrink:0"></span>DEV' +
@@ -106,7 +142,9 @@ The create-page script outputs the correct snippet automatically.
   <link rel="preload" as="script" href="https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist/bundle-name.js" crossorigin>
   <script>
     (function () {
-      var base = window.__devBase || (localStorage.dev ? 'http://127.0.0.1:8080' : 'https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist')
+      var cdn = 'https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist'
+      var devBase = localStorage.devUrl || 'http://127.0.0.1:8080'
+      var base = window.__devBase || (localStorage.dev ? devBase : cdn)
       var s = document.createElement('script')
       s.src = base + '/bundle-name.js'
       s.type = 'module'
