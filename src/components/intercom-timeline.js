@@ -4,6 +4,7 @@ Webflow attribute: data-component="intercom-timeline"
 */
 
 import { drawLine, readCaps, fadeSvgPathStart } from './line-caps.js'
+import { applyLinePosition } from './line-position.js'
 
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
@@ -201,24 +202,20 @@ export default function (elements) {
   })
 
   // --- Per-frame repositioning ---
+  // Read all geometry first, then write — see line-position.js for why.
   function repositionAll() {
-    allBridges.forEach(({ lineContainer, startIcon, endIcon }) => {
+    const layouts = allBridges.map(({ startIcon, endIcon }) => {
       const startC = iconCenter(startIcon)
       const endC = iconCenter(endIcon)
       const topY = startC.pageY + LINE_GAP
-      const bottomY = endC.pageY - LINE_GAP
-      const height = bottomY - topY
-
-      if (height <= 0) {
-        lineContainer.style.display = 'none'
-        return
-      }
-
-      lineContainer.style.display = ''
-      lineContainer.style.left = `${startC.pageX - LINE_WIDTH / 2}px`
-      lineContainer.style.top = `${topY}px`
-      lineContainer.style.height = `${height}px`
+      const height = endC.pageY - LINE_GAP - topY
+      return height <= 0
+        ? { hidden: true }
+        : { left: startC.pageX - LINE_WIDTH / 2, top: topY, height }
     })
+    layouts.forEach((layout, i) =>
+      applyLinePosition(allBridges[i].lineContainer, layout)
+    )
   }
 
   if (allBridges.length) {

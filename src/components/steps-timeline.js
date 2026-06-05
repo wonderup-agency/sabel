@@ -4,6 +4,7 @@ Webflow attribute: data-component="steps-timeline"
 */
 
 import { drawLine, readCaps } from './line-caps.js'
+import { applyLinePosition } from './line-position.js'
 
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
@@ -189,9 +190,10 @@ export default function (elements) {
   })
 
   // --- Per-frame repositioning ---
+  // Read all geometry first, then write — see line-position.js for why.
   function repositionAll() {
-    allSegments.forEach(
-      ({ lineEl, index, items, iconWrappers, startOffsetDesktop }) => {
+    const layouts = allSegments.map(
+      ({ index, items, iconWrappers, startOffsetDesktop }) => {
         const firstCard = items[0]
         const iconWrapper = iconWrappers[index]
         let xPos
@@ -217,16 +219,13 @@ export default function (elements) {
         }
 
         const height = bottomY - topY
-        if (height <= 0) {
-          lineEl.style.display = 'none'
-          return
-        }
-
-        lineEl.style.display = ''
-        lineEl.style.left = `${xPos}px`
-        lineEl.style.top = `${topY}px`
-        lineEl.style.height = `${height}px`
+        return height <= 0
+          ? { hidden: true }
+          : { left: xPos, top: topY, height }
       }
+    )
+    layouts.forEach((layout, i) =>
+      applyLinePosition(allSegments[i].lineEl, layout)
     )
   }
 

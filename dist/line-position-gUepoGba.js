@@ -1,0 +1,1 @@
+function t(t,e){const l=t.__linePos||(t.__linePos={});e.hidden?"none"!==l.display&&(t.style.display="none",l.display="none"):(""!==l.display&&(t.style.display="",l.display=""),l.left!==e.left&&(t.style.left=`${e.left}px`,l.left=e.left),l.top!==e.top&&(t.style.top=`${e.top}px`,l.top=e.top),l.height!==e.height&&(t.style.height=`${e.height}px`,l.height=e.height))}export{t as a};

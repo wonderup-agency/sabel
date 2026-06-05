@@ -39,11 +39,33 @@ async function loadComponent({ selector, importFn }) {
   }
 }
 
-// Wire up lifecycle hooks
-window.addEventListener('resize', () => {
+// Wire up lifecycle hooks.
+//
+// iOS Safari fires `resize` every time the address bar shows/hides during a
+// scroll. That's a HEIGHT-only change, but several components' resize() hooks
+// call ScrollTrigger.refresh() — a heavy synchronous recalc that interrupts
+// native momentum scroll and makes it "stick" mid-flick. So on mobile we ignore
+// resizes where the viewport WIDTH didn't change (the address-bar case); real
+// layout changes (orientation flip, desktop window resize) still pass through.
+// We also debounce so a burst of resize events collapses into a single refresh.
+const RESIZE_MOBILE_MAX = 991
+const RESIZE_DEBOUNCE_MS = 200
+let lastViewportWidth = window.innerWidth
+let resizeTimer = null
+
+function runResizeHooks() {
   activeComponents.forEach(({ hooks }) => {
     if (typeof hooks.resize === 'function') hooks.resize()
   })
+}
+
+window.addEventListener('resize', () => {
+  const width = window.innerWidth
+  // Mobile + width unchanged = browser chrome toggling. Ignore it.
+  if (width <= RESIZE_MOBILE_MAX && width === lastViewportWidth) return
+  lastViewportWidth = width
+  clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(runResizeHooks, RESIZE_DEBOUNCE_MS)
 })
 async function init() {
   try {

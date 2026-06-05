@@ -4,6 +4,7 @@ Webflow attribute: data-component="timeline"
 */
 
 import { drawLine, readCaps } from './line-caps.js'
+import { applyLinePosition } from './line-position.js'
 
 const LINE_WIDTH = 1
 const LINE_COLOR = 'var(--base--red)'
@@ -384,34 +385,31 @@ export default function (elements) {
   // Per-tick repositioning — keeps each bridge container stuck to its two
   // dots through every sticky / flow / pinned transition.
   // ---------------------------------------------------------------------------
-  function positionBridge(bridge) {
-    const { lineContainer, startIcon, endIcon, startEl, isFirst } = bridge
+  // Read-only: compute the target layout for one bridge (no DOM writes).
+  function measureBridge(bridge) {
+    const { startIcon, endIcon, startEl, isFirst } = bridge
     const endC = iconCenter(endIcon)
 
     let topPageY
     if (isFirst) {
       // First bridge: anchored to the bottom of the grid element above.
-      const r = startEl.getBoundingClientRect()
-      topPageY = r.bottom + window.scrollY
+      topPageY = startEl.getBoundingClientRect().bottom + window.scrollY
     } else {
       topPageY = iconCenter(startIcon).pageY + LINE_GAP
     }
-    const bottomPageY = endC.pageY - LINE_GAP
-    const heightPx = bottomPageY - topPageY
+    const heightPx = endC.pageY - LINE_GAP - topPageY
 
-    if (heightPx <= 0) {
-      lineContainer.style.display = 'none'
-      return
-    }
-
-    lineContainer.style.display = ''
-    lineContainer.style.left = `${endC.pageX - LINE_WIDTH / 2}px`
-    lineContainer.style.top = `${topPageY}px`
-    lineContainer.style.height = `${heightPx}px`
+    return heightPx <= 0
+      ? { hidden: true }
+      : { left: endC.pageX - LINE_WIDTH / 2, top: topPageY, height: heightPx }
   }
 
+  // Read all geometry first, then write — see line-position.js for why.
   function repositionAll() {
-    allBridges.forEach(positionBridge)
+    const layouts = allBridges.map(measureBridge)
+    layouts.forEach((layout, i) =>
+      applyLinePosition(allBridges[i].lineContainer, layout)
+    )
   }
 
   if (window.gsap) gsap.ticker.add(repositionAll)

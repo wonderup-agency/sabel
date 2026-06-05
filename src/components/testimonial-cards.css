@@ -25,3 +25,58 @@
   .swiper-slide:not(.swiper-slide-active)::before {
   opacity: 0;
 }
+
+/* Inactive cards: hide their inner content (stars, rich-text, profile) with a
+   fade-out + slight blur so only the focused card reads. Target the slide's
+   DIRECT CHILDREN (`> *`), not the slide itself — that way the card surface
+   (and its `::before` / `::after`) stays visible while the content disappears.
+   Content stays in the DOM (opacity, not display/visibility) so Swiper's A11y
+   module keeps owning aria-hidden — no manual ARIA here. */
+[data-component='testimonial-cards'] .swiper-slide > * {
+  transition:
+    opacity 0.4s ease,
+    filter 0.4s ease;
+}
+
+[data-component='testimonial-cards']
+  .swiper-slide:not(.swiper-slide-active)
+  > * {
+  opacity: 0;
+  filter: blur(4px);
+}
+
+/* Inactive cards: darken the surface so the stack behind reads as depth. A
+   semi-transparent black overlay (`::after`) blends over the card's real
+   Webflow surface instead of replacing its background-color — works regardless
+   of the base color. `::before` is the red top gradient, so this uses
+   `::after`. pointer-events:none so it never blocks the tap-to-advance. */
+[data-component='testimonial-cards'] .swiper-slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: var(--base--black, #0b0b0c);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+[data-component='testimonial-cards']
+  .swiper-slide:not(.swiper-slide-active)::after {
+  opacity: 0.45;
+}
+
+/* Reduced motion: drop the animated crossfade and the blur. Content still
+   hides (opacity 0) and the surface still darkens, just without transitions. */
+@media (prefers-reduced-motion: reduce) {
+  [data-component='testimonial-cards'] .swiper-slide > *,
+  [data-component='testimonial-cards'] .swiper-slide::after {
+    transition: none;
+  }
+
+  [data-component='testimonial-cards']
+    .swiper-slide:not(.swiper-slide-active)
+    > * {
+    filter: none;
+  }
+}
