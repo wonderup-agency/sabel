@@ -45,6 +45,8 @@ export default function (elements) {
 
     // Mobile slider state
     let panelsParent = null
+    let dotsWrapper = null
+    let sliderDots = []
     let currentIndex = 0
     let autoplayTimer = null
     let resumeTimer = null
@@ -256,12 +258,49 @@ export default function (elements) {
       panelsParent.scrollTo({ left: slideLeft(i), behavior: 'smooth' })
     }
 
+    // Pagination dots — reuse Webflow's .hero_tag-icon (+ blur glow child).
+    // Active = red, inactive = grey-2 with the glow hidden (matches timelines).
+    function buildDots() {
+      dotsWrapper = document.createElement('div')
+      dotsWrapper.className = 'scroll-tabs_slider-dots'
+      sliderDots = []
+
+      for (let i = 0; i < numTabs; i++) {
+        const dot = document.createElement('div')
+        dot.className = 'hero_tag-icon'
+        const blur = document.createElement('div')
+        blur.className = 'hero_tag-icon-blur'
+        dot.appendChild(blur)
+        dot.addEventListener('click', () => {
+          onUserInteract()
+          currentIndex = i
+          goToSlide(i)
+          updateDots()
+        })
+        dotsWrapper.appendChild(dot)
+        sliderDots.push(dot)
+      }
+
+      panelsParent.insertAdjacentElement('afterend', dotsWrapper)
+      updateDots()
+    }
+
+    function updateDots() {
+      sliderDots.forEach((dot, i) => {
+        const active = i === currentIndex
+        dot.style.backgroundColor = active ? dotActiveColor : dotInactiveColor
+        const blur = dot.firstElementChild
+        if (blur) blur.style.opacity = active ? '1' : '0'
+      })
+    }
+
     function startAutoplay() {
       stopAutoplay()
       if (!inView || numTabs < 2) return
       autoplayTimer = setInterval(() => {
         currentIndex = (currentIndex + 1) % numTabs
         goToSlide(currentIndex)
+        updateDots()
       }, AUTOPLAY_DELAY)
     }
 
@@ -291,6 +330,7 @@ export default function (elements) {
       clearTimeout(scrollEndTimer)
       scrollEndTimer = setTimeout(() => {
         currentIndex = nearestIndex()
+        updateDots()
         if (!autoplayTimer) scheduleResume()
       }, 120)
     }
@@ -302,6 +342,8 @@ export default function (elements) {
 
       currentIndex = 0
       panelsParent.scrollLeft = 0
+
+      buildDots()
 
       abortController = new AbortController()
       const opts = { signal: abortController.signal, passive: true }
@@ -333,6 +375,11 @@ export default function (elements) {
         abortController.abort()
         abortController = null
       }
+      if (dotsWrapper) {
+        dotsWrapper.remove()
+        dotsWrapper = null
+      }
+      sliderDots = []
       if (panelsParent) {
         panelsParent.classList.remove('scroll-tabs_panels-slider')
         panelsParent.scrollLeft = 0

@@ -19,3 +19,23 @@
   width: 100%;
   scroll-snap-align: start;
 }
+
+/* Pagination dots — built by JS on mobile, reusing .hero_tag-icon styling */
+.scroll-tabs_slider-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.scroll-tabs_slider-dots .hero_tag-icon {
+  cursor: pointer;
+}
+
+.scroll-tabs_slider-dots .hero_tag-icon,
+.scroll-tabs_slider-dots .hero_tag-icon-blur {
+  transition:
+    background-color 0.3s ease,
+    opacity 0.3s ease;
+}
