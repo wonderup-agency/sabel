@@ -1,0 +1,21 @@
+/* scroll-tabs — mobile slider
+   Classes are added by JS only on mobile (≤991px); desktop keeps the
+   grid-stacked panels untouched. */
+
+.scroll-tabs_panels-slider {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.scroll-tabs_panels-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-tabs_panels-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  scroll-snap-align: start;
+}

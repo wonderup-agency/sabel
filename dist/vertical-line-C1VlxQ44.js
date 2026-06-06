@@ -1,0 +1,1 @@
+import{p as r,r as s,s as e}from"./line-caps-DeadhAG9.js";function o(o){o.forEach(o=>{const t=o.querySelector('[data-vertical-line="fill"]')||o;r(t,s(o));const a={progress:0};gsap.to(a,{progress:1,ease:"none",scrollTrigger:{trigger:o,start:"top 80%",end:"bottom 20%",scrub:!0},onUpdate:()=>e(t,a.progress)})})}export{o as default};

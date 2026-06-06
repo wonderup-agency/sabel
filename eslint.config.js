@@ -20,6 +20,7 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         IntersectionObserver: 'readonly',
+        AbortController: 'readonly',
         ResizeObserver: 'readonly',
         MutationObserver: 'readonly',
         localStorage: 'readonly',

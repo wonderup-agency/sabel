@@ -4,9 +4,12 @@ Webflow attribute: data-component="scroll-tabs"
 */
 
 import { getLenis } from './global.js'
+import './scroll-tabs.css'
 
 const CROSSFADE = 0.3
 const MOBILE_BREAKPOINT = 991
+const AUTOPLAY_DELAY = 5000 // ms between auto-advances
+const RESUME_DELAY = 5000 // ms of inactivity before autoplay resumes after a touch
 
 /**
  * @param {HTMLElement[]} elements - All elements matching [data-component='scroll-tabs']
@@ -39,6 +42,16 @@ export default function (elements) {
     let activeTab = 0
     let inactiveColor = ''
     const activated = new Array(numTabs).fill(false)
+
+    // Mobile slider state
+    let panelsParent = null
+    let currentIndex = 0
+    let autoplayTimer = null
+    let resumeTimer = null
+    let scrollEndTimer = null
+    let observer = null
+    let abortController = null
+    let inView = false
 
     function isMobile() {
       return window.innerWidth <= MOBILE_BREAKPOINT
@@ -111,7 +124,7 @@ export default function (elements) {
       return Math.max(navHeight, (window.innerHeight - frameHeight) / 2)
     }
 
-    function setup() {
+    function setupDesktop() {
       el.style.height = `${(numTabs + 1) * 66}vh`
       frame.style.position = 'sticky'
       frame.style.top = `${computeStickyTop()}px`
@@ -174,7 +187,7 @@ export default function (elements) {
 
     // --- Teardown (switching to mobile) ---
 
-    function teardown() {
+    function teardownDesktop() {
       if (st) {
         st.kill()
         st = null
@@ -217,7 +230,121 @@ export default function (elements) {
       activated.fill(false)
     }
 
-    // --- Click to scroll (safe at any breakpoint) ---
+    // --- Mobile slider ---
+
+    // Scroll distance (px) to bring slide i to the start edge. Computed from
+    // offsets rather than clientWidth so gaps/padding don't drift the snap.
+    function slideLeft(i) {
+      return panels[i].offsetLeft - panels[0].offsetLeft
+    }
+
+    function nearestIndex() {
+      const x = panelsParent.scrollLeft
+      let best = 0
+      let bestDist = Infinity
+      panels.forEach((_, i) => {
+        const d = Math.abs(slideLeft(i) - x)
+        if (d < bestDist) {
+          bestDist = d
+          best = i
+        }
+      })
+      return best
+    }
+
+    function goToSlide(i) {
+      panelsParent.scrollTo({ left: slideLeft(i), behavior: 'smooth' })
+    }
+
+    function startAutoplay() {
+      stopAutoplay()
+      if (!inView || numTabs < 2) return
+      autoplayTimer = setInterval(() => {
+        currentIndex = (currentIndex + 1) % numTabs
+        goToSlide(currentIndex)
+      }, AUTOPLAY_DELAY)
+    }
+
+    function stopAutoplay() {
+      if (autoplayTimer) {
+        clearInterval(autoplayTimer)
+        autoplayTimer = null
+      }
+    }
+
+    function scheduleResume() {
+      clearTimeout(resumeTimer)
+      resumeTimer = setTimeout(() => {
+        if (inView) startAutoplay()
+      }, RESUME_DELAY)
+    }
+
+    // Genuine user input → pause immediately (programmatic scrolls don't fire these)
+    function onUserInteract() {
+      stopAutoplay()
+      clearTimeout(resumeTimer)
+    }
+
+    // Fires for both user and programmatic scrolls; only used to sync the
+    // current index once movement settles, then resume if autoplay was paused.
+    function onScroll() {
+      clearTimeout(scrollEndTimer)
+      scrollEndTimer = setTimeout(() => {
+        currentIndex = nearestIndex()
+        if (!autoplayTimer) scheduleResume()
+      }, 120)
+    }
+
+    function setupMobile() {
+      panelsParent = panels[0].parentElement
+      panelsParent.classList.add('scroll-tabs_panels-slider')
+      panels.forEach((panel) => panel.classList.add('scroll-tabs_panels-slide'))
+
+      currentIndex = 0
+      panelsParent.scrollLeft = 0
+
+      abortController = new AbortController()
+      const opts = { signal: abortController.signal, passive: true }
+      panelsParent.addEventListener('pointerdown', onUserInteract, opts)
+      panelsParent.addEventListener('touchstart', onUserInteract, opts)
+      panelsParent.addEventListener('wheel', onUserInteract, opts)
+      panelsParent.addEventListener('scroll', onScroll, opts)
+
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting
+          if (inView) startAutoplay()
+          else stopAutoplay()
+        },
+        { threshold: 0.1 }
+      )
+      observer.observe(el)
+    }
+
+    function teardownMobile() {
+      stopAutoplay()
+      clearTimeout(resumeTimer)
+      clearTimeout(scrollEndTimer)
+      if (observer) {
+        observer.disconnect()
+        observer = null
+      }
+      if (abortController) {
+        abortController.abort()
+        abortController = null
+      }
+      if (panelsParent) {
+        panelsParent.classList.remove('scroll-tabs_panels-slider')
+        panelsParent.scrollLeft = 0
+      }
+      panels.forEach((panel) =>
+        panel.classList.remove('scroll-tabs_panels-slide')
+      )
+      inView = false
+      currentIndex = 0
+    }
+
+    // --- Click to scroll (desktop only — buttons are hidden on mobile) ---
 
     buttons.forEach((btn, i) => {
       btn.addEventListener('click', () => {
@@ -235,16 +362,24 @@ export default function (elements) {
 
     // --- Init based on current breakpoint ---
 
-    let isDesktop = !isMobile()
-    if (isDesktop) setup()
+    let mode = isMobile() ? 'mobile' : 'desktop'
+    if (mode === 'mobile') setupMobile()
+    else setupDesktop()
 
     instances.push({
       checkBreakpoint() {
-        const nowDesktop = !isMobile()
-        if (nowDesktop && !isDesktop) setup()
-        else if (!nowDesktop && isDesktop) teardown()
-        else if (nowDesktop) frame.style.top = `${computeStickyTop()}px`
-        isDesktop = nowDesktop
+        const nowMobile = isMobile()
+        if (nowMobile && mode === 'desktop') {
+          teardownDesktop()
+          setupMobile()
+          mode = 'mobile'
+        } else if (!nowMobile && mode === 'mobile') {
+          teardownMobile()
+          setupDesktop()
+          mode = 'desktop'
+        } else if (!nowMobile) {
+          frame.style.top = `${computeStickyTop()}px`
+        }
       },
     })
   })
