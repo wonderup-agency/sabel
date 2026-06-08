@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Title Deblur Playground</title>
+
+    <!--
+      Anti-FOUC: armamos el estado oculto ANTES de pintar y SOLO desde JS.
+      Si el JS no corre (o hay reduced-motion), la clase nunca se agrega y el
+      texto se ve completo y nítido. Reduced-motion también queda desarmado
+      para que el heading aparezca al instante.
+    -->
+    <script>
+      ;(function () {
+        var rm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (!rm) document.documentElement.classList.add('ta-armed')
+      })()
+    </script>
+
+    <!-- GSAP + ScrollTrigger por CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0b0b0c;
+        --fg: #fff;
+        --muted: #b8b8bd;
+        --red: #e10600;
+        --panel: rgba(20, 20, 22, 0.92);
+        --border: rgba(255, 255, 255, 0.1);
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: 'DM Sans', system-ui, sans-serif;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ─────────────────────────────────────────────
+         Estado inicial anti-FOUC (SOLO vía JS).
+         Ocultamos el heading entero hasta que GSAP
+         tome el control palabra por palabra.
+         opacity (no display) → layout reservado, sin CLS.
+         ───────────────────────────────────────────── */
+      .ta-armed [data-title-animation] {
+        opacity: 0;
+      }
+
+      /* Cada palabra: inline-block para poder transformar/filtrar,
+         conservando el espaciado y el wrapping natural del texto. */
+      [data-word] {
+        display: inline-block;
+        white-space: pre; /* preserva los espacios que metemos en cada span */
+        will-change: filter, opacity, transform;
+      }
+
+      /* ─────────────────────────────────────────────
+         DEMO (no es parte del componente final)
+         ───────────────────────────────────────────── */
+      .zone {
+        max-width: 60rem;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      .hero {
+        min-height: 92vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.25rem;
+      }
+
+      .eyebrow {
+        font-family: 'DM Mono', ui-monospace, monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 0.8rem;
+        color: var(--red);
+      }
+
+      h1 {
+        font-size: clamp(2.75rem, 7vw, 5.5rem);
+        font-weight: 600;
+        line-height: 1.02;
+        letter-spacing: -0.02em;
+        max-width: 16ch;
+      }
+
+      h2 {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: -0.015em;
+        max-width: 18ch;
+      }
+
+      .lead {
+        font-size: clamp(1.1rem, 2vw, 1.5rem);
+        color: var(--muted);
+        max-width: 42ch;
+      }
+
+      .spacer {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.25);
+        font-family: 'DM Mono', ui-monospace, monospace;
+        font-size: 0.85rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .scroll-zone {
+        min-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.25rem;
+        padding-bottom: 30vh;
+      }
+
+      /* ─────────────────────────────────────────────
+         Panel de controles del playground
+         ───────────────────────────────────────────── */
+      .controls {
+        position: fixed;
+        top: 1.25rem;
+        right: 1.25rem;
+        width: 270px;
+        max-height: calc(100vh - 2.5rem);
+        overflow-y: auto;
+        background: var(--panel);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border);
+        border-radius: 0.85rem;
+        padding: 1.25rem 1.35rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        font-size: 0.85rem;
+        z-index: 100;
+      }
+
+      .controls h3 {
+        font-family: 'DM Mono', ui-monospace, monospace;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      .controls label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        color: var(--muted);
+      }
+
+      .controls .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+
+      .controls .value {
+        color: var(--fg);
+        font-variant-numeric: tabular-nums;
+        font-family: 'DM Mono', ui-monospace, monospace;
+      }
+
+      .controls input[type='range'] {
+        width: 100%;
+        accent-color: var(--red);
+      }
+
+      .controls select {
+        width: 100%;
+        background: #161618;
+        color: var(--fg);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 0.45rem 0.5rem;
+        font-family: inherit;
+        font-size: 0.85rem;
+      }
+
+      .controls .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 0.1rem 0;
+      }
+
+      .presets {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: #161618;
+        color: var(--fg);
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.6rem;
+        font-family: inherit;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+
+      .btn:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .btn--primary {
+        background: var(--red);
+        border-color: var(--red);
+        font-weight: 600;
+      }
+
+      .btn--primary:hover {
+        background: #ff1409;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ───────────── Panel de controles (fuera del efecto) ───────────── -->
+    <aside class="controls" data-controls aria-label="Controles del playground">
+      <h3>Parámetros</h3>
+
+      <label>
+        <span class="row"
+          >Blur inicial <span class="value" data-out="blur">12px</span></span
+        >
+        <input
+          type="range"
+          data-ctl="blur"
+          min="0"
+          max="40"
+          value="12"
+          step="1"
+        />
+      </label>
+
+      <label>
+        <span class="row"
+          >Lift (y) <span class="value" data-out="y">20px</span></span
+        >
+        <input type="range" data-ctl="y" min="0" max="60" value="20" step="1" />
+      </label>
+
+      <label>
+        <span class="row"
+          >Duración / palabra
+          <span class="value" data-out="dur">1.00s</span></span
+        >
+        <input
+          type="range"
+          data-ctl="dur"
+          min="0.2"
+          max="2"
+          value="1"
+          step="0.05"
+        />
+      </label>
+
+      <label>
+        <span class="row"
+          >Gap del stagger
+          <span class="value" data-out="stagger">0.08s</span></span
+        >
+        <input
+          type="range"
+          data-ctl="stagger"
+          min="0"
+          max="0.3"
+          value="0.08"
+          step="0.01"
+        />
+      </label>
+
+      <label>
+        Easing
+        <select data-ctl="ease">
+          <option value="power2.out" selected>power2.out</option>
+          <option value="power3.out">power3.out</option>
+          <option value="sine.out">sine.out</option>
+          <option value="expo.out">expo.out</option>
+        </select>
+      </label>
+
+      <label>
+        Orden del stagger
+        <select data-ctl="from">
+          <option value="start">Izquierda → derecha</option>
+          <option value="end">Derecha → izquierda</option>
+          <option value="random">Aleatorio</option>
+          <option value="center">Center-out</option>
+        </select>
+      </label>
+
+      <div class="divider"></div>
+
+      <h3>Presets</h3>
+      <div class="presets">
+        <button class="btn" data-preset="site">Sitio</button>
+        <button class="btn" data-preset="subtle">Sutil</button>
+        <button class="btn" data-preset="editorial">Editorial lento</button>
+        <button class="btn" data-preset="snappy">Snappy</button>
+        <button class="btn" data-preset="dramatic">Dramático</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <button class="btn btn--primary" data-replay>↺ Replay (todos)</button>
+    </aside>
+
+    <!-- ───────────── HERO: anima on load ───────────── -->
+    <section class="zone hero" data-zone="hero">
+      <span class="eyebrow">Above the fold</span>
+      <h1 data-title-animation="True">Land softly, read instantly</h1>
+      <p class="lead" data-title-animation="True">
+        Sub-heading que también deblurea palabra por palabra mientras el resto
+        de la página termina de cargar.
+      </p>
+    </section>
+
+    <div class="spacer">↓ seguí scrolleando ↓</div>
+
+    <!-- ───────────── Más abajo: anima on scroll into view ───────────── -->
+    <section class="zone scroll-zone" data-zone="scroll">
+      <span class="eyebrow">Below the fold</span>
+      <h2 data-title-animation="true">This one waits until you reach it</h2>
+      <p class="lead" data-title-animation="True">
+        Mismo efecto, pero disparado por ScrollTrigger cuando entra al viewport.
+        No se repite al volver a subir.
+      </p>
+    </section>
+
+    <script>
+      ;(function () {
+        'use strict'
+
+        var REDUCED = window.matchMedia(
+          '(prefers-reduced-motion: reduce)'
+        ).matches
+
+        gsap.registerPlugin(ScrollTrigger)
+
+        // ── Configuración viva (la mutan los controles) ──────────────
+        var cfg = {
+          blur: 12, // px  (igual que el sitio: blur(12px))
+          y: 20, // px  lift desde abajo (igual que el hero/text del sitio)
+          dur: 1, // s por palabra
+          stagger: 0.08, // s entre palabras
+          ease: 'power2.out',
+          from: 'start', // start | end | random | center
+        }
+
+        var instances = [] // { el, words, isHero, st }
+
+        // ── Split por palabra, respetando nodos (texto + <br> + anidados) ─
+        // Devuelve la lista de spans [data-word] creados.
+        function splitWords(el) {
+          var words = []
+          var original = el.textContent.replace(/\s+/g, ' ').trim()
+
+          // El lector de pantalla lee el heading UNA sola vez, completo.
+          el.setAttribute('aria-label', original)
+
+          // Procesamos los nodos hijos: text nodes → spans por palabra;
+          // elementos (br, spans de Webflow) se conservan tal cual.
+          var nodes = Array.prototype.slice.call(el.childNodes)
+          nodes.forEach(function (node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+              replaceTextNode(el, node, words)
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+              // Conservamos el elemento (ej. <br>) y, si tiene texto,
+              // lo marcamos aria-hidden para no leerlo dos veces.
+              if (node.tagName !== 'BR')
+                node.setAttribute('aria-hidden', 'true')
+            }
+          })
+
+          return words
+        }
+
+        function replaceTextNode(parent, textNode, words) {
+          var text = textNode.textContent
+          if (!text.trim()) return // whitespace puro entre nodos → lo dejamos
+
+          var frag = document.createDocumentFragment()
+          // Split conservando los separadores (espacios) como tokens propios.
+          var tokens = text.split(/(\s+)/)
+
+          tokens.forEach(function (tok) {
+            if (tok === '') return
+            if (/^\s+$/.test(tok)) {
+              // separador → texto plano (no anima, no rompe el flujo)
+              frag.appendChild(document.createTextNode(tok))
+              return
+            }
+            var span = document.createElement('span')
+            span.setAttribute('data-word', '')
+            span.setAttribute('aria-hidden', 'true')
+            span.textContent = tok
+            frag.appendChild(span)
+            words.push(span)
+          })
+
+          parent.replaceChild(frag, textNode)
+        }
+
+        // ── Estado inicial oculto (blur + opacity 0) ──────────────────
+        function arm(inst) {
+          gsap.set(inst.words, {
+            opacity: 0,
+            y: cfg.y,
+            filter: 'blur(' + cfg.blur + 'px)',
+          })
+          // El contenedor ya puede mostrarse: las palabras están ocultas.
+          gsap.set(inst.el, { opacity: 1 })
+        }
+
+        // ── Animar (deblur palabra por palabra) ───────────────────────
+        function play(inst) {
+          gsap.killTweensOf(inst.words)
+          gsap.to(inst.words, {
+            opacity: 1,
+            y: 0,
+            filter: 'blur(0px)',
+            duration: cfg.dur,
+            ease: cfg.ease,
+            stagger: { each: cfg.stagger, from: cfg.from },
+          })
+        }
+
+        // ── Mostrar al instante, sin animación (reduced motion / fallback) ─
+        function reveal(inst) {
+          gsap.set(inst.el, { opacity: 1 })
+          gsap.set(inst.words, { opacity: 1, y: 0, filter: 'blur(0px)' })
+        }
+
+        // ── Init ──────────────────────────────────────────────────────
+        function init() {
+          var headings = document.querySelectorAll('[data-title-animation]')
+          if (!headings.length) return
+
+          headings.forEach(function (el) {
+            var words = splitWords(el)
+            if (!words.length) return
+
+            var rect = el.getBoundingClientRect()
+            // Hero / above-the-fold: visible (aunque sea parcialmente) al cargar.
+            var isHero = rect.top < window.innerHeight * 0.9
+
+            var inst = { el: el, words: words, isHero: isHero, st: null }
+            instances.push(inst)
+
+            if (REDUCED) {
+              reveal(inst)
+              return
+            }
+
+            arm(inst)
+
+            if (isHero) {
+              play(inst)
+            } else {
+              inst.st = ScrollTrigger.create({
+                trigger: el,
+                start: 'top 80%',
+                toggleActions: 'play none none none',
+                onEnter: function () {
+                  play(inst)
+                },
+              })
+            }
+          })
+
+          // Una vez procesados todos, desarmamos el guard global anti-FOUC
+          // (ya no hace falta: GSAP controla cada heading inline).
+          document.documentElement.classList.remove('ta-armed')
+
+          wireControls()
+        }
+
+        // ── Re-disparar todo con la config actual (botón Replay) ───────
+        function replayAll() {
+          if (REDUCED) return
+          instances.forEach(function (inst) {
+            if (inst.st) inst.st.kill()
+            arm(inst)
+
+            var rect = inst.el.getBoundingClientRect()
+            var inView = rect.top < window.innerHeight && rect.bottom > 0
+
+            if (inView) {
+              play(inst)
+            } else {
+              inst.st = ScrollTrigger.create({
+                trigger: inst.el,
+                start: 'top 80%',
+                toggleActions: 'play none none none',
+                onEnter: function () {
+                  play(inst)
+                },
+              })
+            }
+          })
+        }
+
+        // ── Controles del playground ──────────────────────────────────
+        var PRESETS = {
+          // Réplica del deblur del sitio (home.js: hero text + slogan)
+          site: {
+            blur: 12,
+            y: 20,
+            dur: 1,
+            stagger: 0.08,
+            ease: 'power2.out',
+            from: 'start',
+          },
+          subtle: {
+            blur: 6,
+            y: 10,
+            dur: 0.6,
+            stagger: 0.05,
+            ease: 'sine.out',
+            from: 'start',
+          },
+          editorial: {
+            blur: 18,
+            y: 24,
+            dur: 1.3,
+            stagger: 0.14,
+            ease: 'power2.out',
+            from: 'start',
+          },
+          snappy: {
+            blur: 10,
+            y: 14,
+            dur: 0.4,
+            stagger: 0.03,
+            ease: 'expo.out',
+            from: 'start',
+          },
+          dramatic: {
+            blur: 30,
+            y: 32,
+            dur: 1,
+            stagger: 0.1,
+            ease: 'power3.out',
+            from: 'center',
+          },
+        }
+
+        function fmt(key, val) {
+          if (key === 'blur' || key === 'y') return Math.round(val) + 'px'
+          if (key === 'dur') return parseFloat(val).toFixed(2) + 's'
+          if (key === 'stagger') return parseFloat(val).toFixed(2) + 's'
+          return val
+        }
+
+        function syncUI() {
+          document.querySelectorAll('[data-ctl]').forEach(function (input) {
+            var key = input.getAttribute('data-ctl')
+            input.value = cfg[key]
+            var out = document.querySelector('[data-out="' + key + '"]')
+            if (out) out.textContent = fmt(key, cfg[key])
+          })
+        }
+
+        function wireControls() {
+          syncUI()
+
+          document.querySelectorAll('[data-ctl]').forEach(function (input) {
+            input.addEventListener('input', function () {
+              var key = input.getAttribute('data-ctl')
+              var val = input.value
+              cfg[key] =
+                key === 'ease' || key === 'from' ? val : parseFloat(val)
+              var out = document.querySelector('[data-out="' + key + '"]')
+              if (out) out.textContent = fmt(key, cfg[key])
+              replayAll()
+            })
+          })
+
+          document.querySelectorAll('[data-preset]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var p = PRESETS[btn.getAttribute('data-preset')]
+              if (!p) return
+              cfg = Object.assign({}, cfg, p)
+              syncUI()
+              replayAll()
+            })
+          })
+
+          var replayBtn = document.querySelector('[data-replay]')
+          if (replayBtn) replayBtn.addEventListener('click', replayAll)
+        }
+
+        // ── Arranque: esperar a las fuentes para no romper el wrapping ─
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(init)
+        } else {
+          window.addEventListener('load', init)
+        }
+      })()
+    </script>
+  </body>
+</html>

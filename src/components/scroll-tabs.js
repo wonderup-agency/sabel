@@ -51,6 +51,7 @@ export default function (elements) {
     let autoplayTimer = null
     let resumeTimer = null
     let scrollEndTimer = null
+    let scrollRaf = null
     let observer = null
     let abortController = null
     let inView = false
@@ -324,13 +325,22 @@ export default function (elements) {
       clearTimeout(resumeTimer)
     }
 
-    // Fires for both user and programmatic scrolls; only used to sync the
-    // current index once movement settles, then resume if autoplay was paused.
+    // Fires for both user and programmatic scrolls. Updates the active dot live
+    // (rAF-throttled) so it tracks the swipe in real time, and uses a settle
+    // timer only to resume autoplay once movement stops.
     function onScroll() {
+      if (scrollRaf === null) {
+        scrollRaf = requestAnimationFrame(() => {
+          scrollRaf = null
+          const idx = nearestIndex()
+          if (idx !== currentIndex) {
+            currentIndex = idx
+            updateDots()
+          }
+        })
+      }
       clearTimeout(scrollEndTimer)
       scrollEndTimer = setTimeout(() => {
-        currentIndex = nearestIndex()
-        updateDots()
         if (!autoplayTimer) scheduleResume()
       }, 120)
     }
@@ -367,6 +377,10 @@ export default function (elements) {
       stopAutoplay()
       clearTimeout(resumeTimer)
       clearTimeout(scrollEndTimer)
+      if (scrollRaf !== null) {
+        cancelAnimationFrame(scrollRaf)
+        scrollRaf = null
+      }
       if (observer) {
         observer.disconnect()
         observer = null

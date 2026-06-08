@@ -1,0 +1,22 @@
+/*
+title-animation — anti-FOUC guard + per-word layout.
+
+The hidden initial state is gated on `html.ta-armed`, a class added by the
+Webflow head snippet BEFORE first paint (and skipped under reduced-motion).
+Shipping it in dist/styles.css (present in the CSSOM before any JS runs) means
+the heading is invisible from frame 1 — no flash of sharp text. With no JS the
+class is never added, so the real heading stays visible and indexable.
+*/
+
+html.ta-armed [data-title-animation='True' i] {
+  opacity: 0;
+}
+
+/* Each split word: inline-block so it can be transformed/filtered, while
+   white-space: pre keeps the spacing tokens we inject. inline-block + the
+   original wrapping means the split adds no layout height change → no CLS. */
+[data-word] {
+  display: inline-block;
+  white-space: pre;
+  will-change: filter, opacity, transform;
+}

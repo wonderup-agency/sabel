@@ -15,6 +15,7 @@ export default [
         HTMLImageElement: 'readonly',
         getComputedStyle: 'readonly',
         requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
         setTimeout: 'readonly',

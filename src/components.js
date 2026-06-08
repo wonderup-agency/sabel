@@ -15,6 +15,14 @@
 
 export default [
   {
+    // Activates only when data-title-animation="True" (case-insensitive), not
+    // on mere presence — so other elements that happen to carry the attribute
+    // with a different value are left alone. main.js queries the selector
+    // verbatim, so any CSS selector works here.
+    selector: '[data-title-animation="True" i]',
+    importFn: () => import('./components/title-animation.js'),
+  },
+  {
     selector: "[data-component='blueprint-lines']",
     importFn: () => import('./components/blueprint-lines.js'),
   },

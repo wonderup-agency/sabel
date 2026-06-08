@@ -43,6 +43,15 @@ Setup:
 
 <script>
   ;(function () {
+    // Arm the title-animation deblur BEFORE first paint. The matching CSS in
+    // dist/styles.css (`html.ta-armed [data-title-animation]{opacity:0}`) hides
+    // those headings until JS splits + animates them — no flash of sharp text.
+    // Skipped under reduced-motion (and when JS is off) so the text stays
+    // visible and indexable in those cases.
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('ta-armed')
+    }
+
     var dev = localStorage.dev
     var cdn = 'https://cdn.jsdelivr.net/gh/wonderup-agency/your-repo@main/dist'
 
