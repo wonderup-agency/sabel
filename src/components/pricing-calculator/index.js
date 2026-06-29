@@ -472,7 +472,7 @@ function initCalculator(root) {
         <div style="flex:1;">
           <div class="pc-comp-title">
             <span class="pc-name">Ongoing Retainer</span>
-            <a class="pc-learn-more" href="https://www.sabelcustomersuccess.com/services/retainer" target="_blank" rel="noopener">Learn more ↗</a>
+            <a class="pc-learn-more" href="mailto:info@sabelcustomersuccess.com">Learn more ↗</a>
             <span class="pc-tag">RECOMMENDED AFTER LAUNCH</span>
           </div>
           <p class="pc-comp-desc">Continuous Fin tuning, workflow optimisation, and support. Hours pool quarterly.</p>

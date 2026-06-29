@@ -43,7 +43,7 @@ export const CONFIG = {
       pillar: 'FOUNDATIONS',
       name: 'Foundation Setup',
       desc: 'Workspace, brands, channels, teams, inboxes, routing, and core configuration.',
-      learnMore: '/services/intercom-foundations',
+      learnMore: '/services/fin-foundations',
       unitLabel: 'workspace',
       baseHours: 28,
       defaultCount: 1,
