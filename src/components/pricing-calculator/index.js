@@ -30,6 +30,19 @@ function readStoredCurrency() {
 }
 
 function initCalculator(root) {
+  // Data: Webflow-hosted overrides merged over config defaults.
+  const DATA = window.SABEL_CALCULATOR_DATA || {}
+  const COMPONENTS = Array.isArray(DATA.components)
+    ? DATA.components
+    : CONFIG.components
+  const RETAINER_TIERS = Array.isArray(DATA.retainerTiers)
+    ? DATA.retainerTiers
+    : CONFIG.retainerTiers
+  const MIGRATION_PLATFORMS =
+    DATA.migrationPlatforms && typeof DATA.migrationPlatforms === 'object'
+      ? DATA.migrationPlatforms
+      : CONFIG.migration.platforms
+
   // ----- State -----
   const state = {
     setup: 'new',
@@ -48,7 +61,7 @@ function initCalculator(root) {
   }
 
   // Initialise component state from defaults
-  CONFIG.components.forEach((c) => {
+  COMPONENTS.forEach((c) => {
     state.components[c.id] = {
       enabled: c.defaultEnabled,
       count: c.defaultCount,
@@ -88,8 +101,8 @@ function initCalculator(root) {
     }
 
     const platDef =
-      CONFIG.migration.platforms[state.migration.sourcePlatform] ||
-      CONFIG.migration.platforms['Other']
+      MIGRATION_PLATFORMS[state.migration.sourcePlatform] ||
+      MIGRATION_PLATFORMS['Other']
     const surcharge = CONFIG.migration.surchargeBaseUSD * platDef.multiplier
     let total = subtotal + surcharge
 
@@ -101,17 +114,12 @@ function initCalculator(root) {
 
   const getRetainerUSD = () => {
     if (!state.retainerSelected) return 0
-    const tier = CONFIG.retainerTiers.find(
-      (t) => t.id === state.retainerSelected
-    )
+    const tier = RETAINER_TIERS.find((t) => t.id === state.retainerSelected)
     return tier ? tier.pricing.USD : 0
   }
 
   const calcProjectSubtotalUSD = () => {
-    let total = CONFIG.components.reduce(
-      (sum, c) => sum + calcComponentUSD(c),
-      0
-    )
+    let total = COMPONENTS.reduce((sum, c) => sum + calcComponentUSD(c), 0)
     total += calcMigrationUSD()
     return total
   }
@@ -140,6 +148,12 @@ function initCalculator(root) {
   // Copy: Webflow-hosted overrides merged over config defaults.
   const COPY = { ...CONFIG.copy, ...(window.SABEL_CALCULATOR_COPY || {}) }
   const t = (key) => COPY[key] ?? CONFIG.copy[key] ?? ''
+
+  // Supported platforms list (qualifier) — the non-fallback platforms.
+  const supportedHtml = Object.keys(MIGRATION_PLATFORMS)
+    .filter((k) => !MIGRATION_PLATFORMS[k].fallback)
+    .map((n) => `<span class="pc-platform-name">${escape(n)}</span>`)
+    .join('<span class="pc-platform-sep">·</span>')
 
   // ----- Build the static shell once -----
   root.innerHTML = `
@@ -181,13 +195,7 @@ function initCalculator(root) {
                   <span class="pc-desc">${escape(t('migrationCheckDesc'))}</span>
                   <div class="pc-platform-list">
                     <span class="pc-platform-list-label">${escape(t('supportedLabel'))}</span>
-                    <span class="pc-platform-name">Zendesk</span><span class="pc-platform-sep">·</span>
-                    <span class="pc-platform-name">Freshdesk</span><span class="pc-platform-sep">·</span>
-                    <span class="pc-platform-name">Help Scout</span><span class="pc-platform-sep">·</span>
-                    <span class="pc-platform-name">Zoho Desk</span><span class="pc-platform-sep">·</span>
-                    <span class="pc-platform-name">LiveChat</span><span class="pc-platform-sep">·</span>
-                    <span class="pc-platform-name">Salesforce Service Cloud</span><span class="pc-platform-sep">·</span>
-                    <span class="pc-platform-name">Intercom</span>
+                    ${supportedHtml}
                   </div>
                 </span>
               </label>
@@ -293,7 +301,7 @@ function initCalculator(root) {
 
     // Group by pillar (preserving insertion order)
     const groups = new Map()
-    CONFIG.components.forEach((c) => {
+    COMPONENTS.forEach((c) => {
       if (!groups.has(c.pillar)) groups.set(c.pillar, [])
       groups.get(c.pillar).push(c)
     })
@@ -401,8 +409,8 @@ function initCalculator(root) {
     const div = document.createElement('div')
     div.className = 'pc-component is-active'
     const usd = calcMigrationUSD()
-    const platformOpts = Object.keys(CONFIG.migration.platforms).filter(
-      (k) => !CONFIG.migration.platforms[k].fallback
+    const platformOpts = Object.keys(MIGRATION_PLATFORMS).filter(
+      (k) => !MIGRATION_PLATFORMS[k].fallback
     )
     const priceLabel = state.priceRevealed
       ? fmtCurrency(usd)
@@ -487,9 +495,8 @@ function initCalculator(root) {
       </div>
 
       <div class="pc-retainer-tiers">
-        ${CONFIG.retainerTiers
-          .map(
-            (tier) => `
+        ${RETAINER_TIERS.map(
+          (tier) => `
           <div class="pc-retainer-tier ${state.retainerSelected === tier.id ? 'is-selected' : ''}" data-tier="${escape(tier.id)}">
             <div class="pc-tier-name">${escape(tier.name)}</div>
             <div class="pc-tier-hours">${tier.hoursPerMonth} ${escape(t('retainerHoursSuffix'))}</div>
@@ -497,8 +504,7 @@ function initCalculator(root) {
             <ul>${tier.inclusions.map((i) => `<li>${escape(i)}</li>`).join('')}</ul>
           </div>
         `
-          )
-          .join('')}
+        ).join('')}
       </div>
       ${state.retainerSelected ? `<button class="pc-clear-retainer" data-pc="clear-retainer">${escape(t('retainerRemove'))}</button>` : ''}
     `
@@ -537,7 +543,7 @@ function initCalculator(root) {
 
     // Build breakdown
     const items = []
-    CONFIG.components.forEach((c) => {
+    COMPONENTS.forEach((c) => {
       const s = state.components[c.id]
       if (s.enabled && s.count > 0) {
         const usd = calcComponentUSD(c)
@@ -581,9 +587,7 @@ function initCalculator(root) {
     `
 
     if (state.retainerSelected && retainerUSD > 0) {
-      const tier = CONFIG.retainerTiers.find(
-        (t) => t.id === state.retainerSelected
-      )
+      const tier = RETAINER_TIERS.find((t) => t.id === state.retainerSelected)
       html += `
         <div class="pc-breakdown-row is-retainer" style="margin-top:0.875rem;">
           <span class="pc-label">Retainer · ${escape(tier.name)}</span>
@@ -742,26 +746,23 @@ function initCalculator(root) {
     const symbol = CONFIG.currencySymbol[state.currency]
     const projectUSD = calcProjectSubtotalUSD()
 
-    const components = CONFIG.components
-      .filter(
-        (c) =>
-          state.components[c.id].enabled && state.components[c.id].count > 0
-      )
-      .map((c) => {
-        const s = state.components[c.id]
-        const hours = calcComponentHours(c)
-        const priceUSD = calcComponentUSD(c)
-        return {
-          id: c.id,
-          name: c.name,
-          count: s.count,
-          complexity: s.complexity,
-          unitLabel: c.unitLabel,
-          hours: Number(hours.toFixed(2)),
-          priceUSD: Math.round(priceUSD),
-          priceClient: Math.round(priceUSD * fxRate),
-        }
-      })
+    const components = COMPONENTS.filter(
+      (c) => state.components[c.id].enabled && state.components[c.id].count > 0
+    ).map((c) => {
+      const s = state.components[c.id]
+      const hours = calcComponentHours(c)
+      const priceUSD = calcComponentUSD(c)
+      return {
+        id: c.id,
+        name: c.name,
+        count: s.count,
+        complexity: s.complexity,
+        unitLabel: c.unitLabel,
+        hours: Number(hours.toFixed(2)),
+        priceUSD: Math.round(priceUSD),
+        priceClient: Math.round(priceUSD * fxRate),
+      }
+    })
 
     const totalHours = components.reduce((sum, c) => sum + c.hours, 0)
 
@@ -769,8 +770,8 @@ function initCalculator(root) {
     if (state.migrationEnabled) {
       const migUSD = calcMigrationUSD()
       const platDef =
-        CONFIG.migration.platforms[state.migration.sourcePlatform] ||
-        CONFIG.migration.platforms['Other']
+        MIGRATION_PLATFORMS[state.migration.sourcePlatform] ||
+        MIGRATION_PLATFORMS['Other']
       const surcharge = CONFIG.migration.surchargeBaseUSD * platDef.multiplier
       migration = {
         sourcePlatform: state.migration.sourcePlatform,
@@ -783,9 +784,7 @@ function initCalculator(root) {
 
     let retainer = null
     if (state.retainerSelected) {
-      const tier = CONFIG.retainerTiers.find(
-        (t) => t.id === state.retainerSelected
-      )
+      const tier = RETAINER_TIERS.find((t) => t.id === state.retainerSelected)
       if (tier) {
         retainer = {
           tierId: tier.id,
@@ -989,7 +988,7 @@ function initCalculator(root) {
 
       const projectUSD = calcProjectSubtotalUSD()
 
-      CONFIG.components.forEach((c) => {
+      COMPONENTS.forEach((c) => {
         const s = state.components[c.id]
         if (s.enabled && s.count > 0) {
           const usd = calcComponentUSD(c)
@@ -1051,9 +1050,7 @@ function initCalculator(root) {
         doc.line(M, y, M + 100, y)
         y += 22
 
-        const tier = CONFIG.retainerTiers.find(
-          (t) => t.id === state.retainerSelected
-        )
+        const tier = RETAINER_TIERS.find((t) => t.id === state.retainerSelected)
         const usd = tier.pricing.USD
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(11)

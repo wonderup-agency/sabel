@@ -1,5 +1,4 @@
 // Pricing Calculator UI copy — lives in Webflow custom code, not the bundle.
-// Paste inside <script>…</script> before </head>, above the calculator script.
 // Edit only the text between quotes; missing keys fall back to config.js defaults.
 
 window.SABEL_CALCULATOR_COPY = {
