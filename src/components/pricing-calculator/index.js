@@ -137,6 +137,10 @@ function initCalculator(root) {
         })[m]
     )
 
+  // Copy: Webflow-hosted overrides merged over config defaults.
+  const COPY = { ...CONFIG.copy, ...(window.SABEL_CALCULATOR_COPY || {}) }
+  const t = (key) => COPY[key] ?? CONFIG.copy[key] ?? ''
+
   // ----- Build the static shell once -----
   root.innerHTML = `
     <div class="pc-scoping-grid">
@@ -145,26 +149,26 @@ function initCalculator(root) {
           <div class="pc-step-header">
             <div class="pc-step-badge">01</div>
             <div class="pc-step-title">
-              <h2>Where are you with Intercom?</h2>
-              <p class="pc-sub">Tell us your situation so we can tailor the components and defaults below.</p>
+              <h2>${escape(t('step1Title'))}</h2>
+              <p class="pc-sub">${escape(t('step1Sub'))}</p>
             </div>
           </div>
 
           <div class="pc-q-block">
-            <h3>1. Your Intercom setup</h3>
+            <h3>${escape(t('setupQuestion'))}</h3>
             <div class="pc-radio-row" data-pc="setup-radios">
               <label class="pc-selectable is-selected" data-value="new">
                 <span class="pc-radio-dot"></span>
                 <span class="pc-label-block">
-                  <span class="pc-name">New to Intercom</span>
-                  <span class="pc-desc">Starting from a clean workspace</span>
+                  <span class="pc-name">${escape(t('setupNewName'))}</span>
+                  <span class="pc-desc">${escape(t('setupNewDesc'))}</span>
                 </span>
               </label>
               <label class="pc-selectable" data-value="existing">
                 <span class="pc-radio-dot"></span>
                 <span class="pc-label-block">
-                  <span class="pc-name">Already live on Intercom</span>
-                  <span class="pc-desc">Optimising an existing setup</span>
+                  <span class="pc-name">${escape(t('setupExistingName'))}</span>
+                  <span class="pc-desc">${escape(t('setupExistingDesc'))}</span>
                 </span>
               </label>
             </div>
@@ -173,10 +177,10 @@ function initCalculator(root) {
               <label class="pc-selectable" data-pc="migration-check">
                 <span class="pc-checkbox-tick"></span>
                 <span class="pc-label-block">
-                  <span class="pc-name">Migration required <span class="pc-tag" style="margin-left:0.5rem;">VIA MIGR8NOW</span></span>
-                  <span class="pc-desc">Migrating from another platform.</span>
+                  <span class="pc-name">${escape(t('migrationCheckName'))} <span class="pc-tag" style="margin-left:0.5rem;">${escape(t('migrationCardTag'))}</span></span>
+                  <span class="pc-desc">${escape(t('migrationCheckDesc'))}</span>
                   <div class="pc-platform-list">
-                    <span class="pc-platform-list-label">Supported:</span>
+                    <span class="pc-platform-list-label">${escape(t('supportedLabel'))}</span>
                     <span class="pc-platform-name">Zendesk</span><span class="pc-platform-sep">·</span>
                     <span class="pc-platform-name">Freshdesk</span><span class="pc-platform-sep">·</span>
                     <span class="pc-platform-name">Help Scout</span><span class="pc-platform-sep">·</span>
@@ -191,12 +195,12 @@ function initCalculator(root) {
           </div>
 
           <div class="pc-q-block">
-            <h3>2. How large is your CX team?</h3>
+            <h3>${escape(t('teamQuestion'))}</h3>
             <div class="pc-pill-group" data-pc="team-size">
-              <button class="pc-pill-btn" data-value="1-5">1–5 agents</button>
-              <button class="pc-pill-btn is-selected" data-value="6-15">6–15 agents</button>
-              <button class="pc-pill-btn" data-value="16-50">16–50 agents</button>
-              <button class="pc-pill-btn" data-value="50+">50+ agents</button>
+              <button class="pc-pill-btn" data-value="1-5">${escape(t('teamOption1'))}</button>
+              <button class="pc-pill-btn is-selected" data-value="6-15">${escape(t('teamOption2'))}</button>
+              <button class="pc-pill-btn" data-value="16-50">${escape(t('teamOption3'))}</button>
+              <button class="pc-pill-btn" data-value="50+">${escape(t('teamOption4'))}</button>
             </div>
           </div>
         </section>
@@ -205,8 +209,8 @@ function initCalculator(root) {
           <div class="pc-step-header">
             <div class="pc-step-badge">02</div>
             <div class="pc-step-title">
-              <h2>Build your engagement</h2>
-              <p class="pc-sub">All components are optional. Adjust counts and complexity to match your needs.</p>
+              <h2>${escape(t('step2Title'))}</h2>
+              <p class="pc-sub">${escape(t('step2Sub'))}</p>
             </div>
           </div>
           <div class="pc-components" data-pc="components-list"></div>
@@ -215,7 +219,7 @@ function initCalculator(root) {
 
       <aside class="pc-price-panel" data-pc="price-panel">
         <div class="pc-price-header">
-          <div class="pc-label">YOUR ENGAGEMENT</div>
+          <div class="pc-label">${escape(t('panelLabel'))}</div>
         </div>
         <div class="pc-currency-pill" data-pc="currency-pill">
           <button data-currency="USD">USD</button>
@@ -226,16 +230,13 @@ function initCalculator(root) {
         <div class="pc-total-block">
           <div class="pc-from-label" data-pc="from-label"></div>
           <div class="pc-total is-pending" data-pc="grand-total">$ —</div>
-          <div class="pc-total-meta" data-pc="total-meta">Click Calculate to reveal pricing</div>
+          <div class="pc-total-meta" data-pc="total-meta">${escape(t('pricePendingMeta'))}</div>
         </div>
         <div class="pc-breakdown" data-pc="breakdown-list"></div>
-        <div class="pc-disclaimer">
-          Prices shown are indicative estimates based on your selections.
-          Final scope confirmed during discovery.
-        </div>
+        <div class="pc-disclaimer">${escape(t('priceDisclaimer'))}</div>
         <div class="pc-panel-cta">
-          <button class="pc-btn-primary" data-pc="cta-primary">Calculate my engagement</button>
-          <button class="pc-btn-secondary" data-pc="cta-pdf" style="display:none;">Download estimate (PDF)</button>
+          <button class="pc-btn-primary" data-pc="cta-primary">${escape(t('ctaCalculate'))}</button>
+          <button class="pc-btn-secondary" data-pc="cta-pdf" style="display:none;">${escape(t('ctaPdf'))}</button>
         </div>
       </aside>
     </div>
@@ -258,22 +259,22 @@ function initCalculator(root) {
   modal.innerHTML = `
     <div class="pc-modal">
       <button class="pc-modal-close" aria-label="Close">×</button>
-      <h3>Reveal your estimate</h3>
-      <p class="pc-modal-sub">Tell us who you are and we'll show your indicative engagement pricing right here, plus drop a copy in our inbox so we can follow up if helpful.</p>
+      <h3>${escape(t('modalTitle'))}</h3>
+      <p class="pc-modal-sub">${escape(t('modalSub'))}</p>
 
-      <label for="pc-calc-name">Your name</label>
+      <label for="pc-calc-name">${escape(t('modalNameLabel'))}</label>
       <input type="text" id="pc-calc-name" autocomplete="name" required>
-      <div class="pc-field-error" data-pc="err-name">Please enter your name.</div>
+      <div class="pc-field-error" data-pc="err-name">${escape(t('modalErrName'))}</div>
 
-      <label for="pc-calc-company">Company</label>
+      <label for="pc-calc-company">${escape(t('modalCompanyLabel'))}</label>
       <input type="text" id="pc-calc-company" autocomplete="organization" required>
-      <div class="pc-field-error" data-pc="err-company">Please enter your company name.</div>
+      <div class="pc-field-error" data-pc="err-company">${escape(t('modalErrCompany'))}</div>
 
-      <button class="pc-modal-cta" data-pc="calc-submit">Reveal my estimate</button>
+      <button class="pc-modal-cta" data-pc="calc-submit">${escape(t('modalSubmit'))}</button>
 
       <div class="pc-submit-error" data-pc="submit-error"></div>
 
-      <p class="pc-privacy-note">We use your details to follow up on your enquiry. No spam, no sharing.</p>
+      <p class="pc-privacy-note">${escape(t('modalPrivacy'))}</p>
     </div>
   `
   document.body.appendChild(modal)
@@ -308,14 +309,14 @@ function initCalculator(root) {
     if (state.migrationEnabled) {
       const migLabel = document.createElement('div')
       migLabel.className = 'pc-section-label'
-      migLabel.textContent = 'MIGRATION'
+      migLabel.textContent = t('sectionMigration')
       componentsList.appendChild(migLabel)
       componentsList.appendChild(renderMigrationCard())
     }
 
     const retLabel = document.createElement('div')
     retLabel.className = 'pc-section-label'
-    retLabel.textContent = 'ONGOING OPTIMISATION'
+    retLabel.textContent = t('sectionOptimisation')
     componentsList.appendChild(retLabel)
     componentsList.appendChild(renderRetainerCard())
   }
@@ -329,27 +330,28 @@ function initCalculator(root) {
     const priceLabel = s.enabled
       ? state.priceRevealed
         ? fmtCurrency(usd)
-        : 'Calculating'
-      : 'Not added'
-    const fromText = s.enabled && state.priceRevealed ? 'From ' : ''
+        : t('compCalculating')
+      : t('compNotAdded')
+    const fromText =
+      s.enabled && state.priceRevealed ? t('labelFrom') + ' ' : ''
 
     div.innerHTML = `
       <div class="pc-comp-head">
         <div>
           <div class="pc-comp-title">
             <span class="pc-name">${escape(c.name)}</span>
-            <a class="pc-learn-more" href="${escape(c.learnMore)}" target="_blank" rel="noopener">Learn more ↗</a>
+            <a class="pc-learn-more" href="${escape(c.learnMore)}" target="_blank" rel="noopener">${escape(t('labelLearnMore'))}</a>
           </div>
           <p class="pc-comp-desc">${escape(c.desc)}</p>
         </div>
         <div class="pc-comp-price-block">
-          <div class="pc-comp-price"><span class="pc-from">${fromText}</span>${escape(priceLabel)}</div>
+          <div class="pc-comp-price"><span class="pc-from">${escape(fromText)}</span>${escape(priceLabel)}</div>
         </div>
       </div>
 
       <div class="pc-toggle-row">
         <div class="pc-toggle-switch ${s.enabled ? 'is-on' : ''}" data-action="toggle"></div>
-        <span class="pc-toggle-label">${s.enabled ? 'Included in your engagement' : 'Add to your engagement'}</span>
+        <span class="pc-toggle-label">${escape(s.enabled ? t('compIncluded') : t('compAdd'))}</span>
       </div>
 
       ${
@@ -402,27 +404,29 @@ function initCalculator(root) {
     const platformOpts = Object.keys(CONFIG.migration.platforms).filter(
       (k) => !CONFIG.migration.platforms[k].fallback
     )
-    const priceLabel = state.priceRevealed ? fmtCurrency(usd) : 'Calculating'
-    const fromText = state.priceRevealed ? 'From ' : ''
+    const priceLabel = state.priceRevealed
+      ? fmtCurrency(usd)
+      : t('compCalculating')
+    const fromText = state.priceRevealed ? t('labelFrom') + ' ' : ''
 
     div.innerHTML = `
       <div class="pc-comp-head">
         <div style="flex:1;">
           <div class="pc-comp-title">
-            <span class="pc-name">Migration</span>
-            <a class="pc-learn-more" href="${escape(CONFIG.migration.learnMore)}" target="_blank" rel="noopener">Learn more ↗</a>
-            <span class="pc-tag">VIA MIGR8NOW</span>
+            <span class="pc-name">${escape(t('migrationCardTitle'))}</span>
+            <a class="pc-learn-more" href="${escape(t('migrationCardLearnMore'))}" target="_blank" rel="noopener">${escape(t('labelLearnMore'))}</a>
+            <span class="pc-tag">${escape(t('migrationCardTag'))}</span>
           </div>
-          <p class="pc-comp-desc">Tickets, users, articles, tags, and historical data via Migr8Now.</p>
+          <p class="pc-comp-desc">${escape(t('migrationCardDesc'))}</p>
         </div>
         <div class="pc-comp-price-block">
-          <div class="pc-comp-price"><span class="pc-from">${fromText}</span>${escape(priceLabel)}</div>
+          <div class="pc-comp-price"><span class="pc-from">${escape(fromText)}</span>${escape(priceLabel)}</div>
         </div>
       </div>
 
       <div class="pc-comp-controls" style="gap:1.5rem; align-items:center;">
         <div style="display:flex; align-items:center; gap:0.625rem;">
-          <label style="color:var(--pc-body); font-size:0.875rem;">Source:</label>
+          <label style="color:var(--pc-body); font-size:0.875rem;">${escape(t('migrationSourceLabel'))}</label>
           <select class="pc-select-input" data-pc="mig-source">
             ${platformOpts
               .map(
@@ -433,10 +437,10 @@ function initCalculator(root) {
           </select>
         </div>
         <div class="pc-slider-wrap">
-          <label style="color:var(--pc-body); font-size:0.875rem; white-space:nowrap;">Volume:</label>
+          <label style="color:var(--pc-body); font-size:0.875rem; white-space:nowrap;">${escape(t('migrationVolumeLabel'))}</label>
           <input type="range" class="pc-slider-input" data-pc="mig-volume"
                  min="0" max="2000000" step="10000" value="${state.migration.ticketVolume}">
-          <span class="pc-slider-value" data-pc="mig-volume-label">~${fmtNumber(state.migration.ticketVolume)} tickets</span>
+          <span class="pc-slider-value" data-pc="mig-volume-label">~${fmtNumber(state.migration.ticketVolume)} ${escape(t('migrationTicketsSuffix'))}</span>
         </div>
       </div>
     `
@@ -454,9 +458,12 @@ function initCalculator(root) {
     slider.addEventListener('input', (e) => {
       state.migration.ticketVolume = parseInt(e.target.value, 10)
       lab.textContent =
-        '~' + fmtNumber(state.migration.ticketVolume) + ' tickets'
+        '~' +
+        fmtNumber(state.migration.ticketVolume) +
+        ' ' +
+        t('migrationTicketsSuffix')
       if (state.priceRevealed) {
-        priceEl.innerHTML = `<span class="pc-from">From </span>${fmtCurrency(calcMigrationUSD())}`
+        priceEl.innerHTML = `<span class="pc-from">${escape(t('labelFrom'))} </span>${fmtCurrency(calcMigrationUSD())}`
       }
       renderPricePanel()
     })
@@ -471,29 +478,29 @@ function initCalculator(root) {
       <div class="pc-comp-head">
         <div style="flex:1;">
           <div class="pc-comp-title">
-            <span class="pc-name">Ongoing Retainer</span>
-            <a class="pc-learn-more" href="mailto:info@sabelcustomersuccess.com">Learn more ↗</a>
-            <span class="pc-tag">RECOMMENDED AFTER LAUNCH</span>
+            <span class="pc-name">${escape(t('retainerTitle'))}</span>
+            <a class="pc-learn-more" href="${escape(t('retainerLearnMore'))}">${escape(t('labelLearnMore'))}</a>
+            <span class="pc-tag">${escape(t('retainerTag'))}</span>
           </div>
-          <p class="pc-comp-desc">Continuous Fin tuning, workflow optimisation, and support. Hours pool quarterly.</p>
+          <p class="pc-comp-desc">${escape(t('retainerDesc'))}</p>
         </div>
       </div>
 
       <div class="pc-retainer-tiers">
         ${CONFIG.retainerTiers
           .map(
-            (t) => `
-          <div class="pc-retainer-tier ${state.retainerSelected === t.id ? 'is-selected' : ''}" data-tier="${escape(t.id)}">
-            <div class="pc-tier-name">${escape(t.name)}</div>
-            <div class="pc-tier-hours">${t.hoursPerMonth} HRS / MO</div>
+            (tier) => `
+          <div class="pc-retainer-tier ${state.retainerSelected === tier.id ? 'is-selected' : ''}" data-tier="${escape(tier.id)}">
+            <div class="pc-tier-name">${escape(tier.name)}</div>
+            <div class="pc-tier-hours">${tier.hoursPerMonth} ${escape(t('retainerHoursSuffix'))}</div>
             <hr>
-            <ul>${t.inclusions.map((i) => `<li>${escape(i)}</li>`).join('')}</ul>
+            <ul>${tier.inclusions.map((i) => `<li>${escape(i)}</li>`).join('')}</ul>
           </div>
         `
           )
           .join('')}
       </div>
-      ${state.retainerSelected ? `<button class="pc-clear-retainer" data-pc="clear-retainer">Remove retainer</button>` : ''}
+      ${state.retainerSelected ? `<button class="pc-clear-retainer" data-pc="clear-retainer">${escape(t('retainerRemove'))}</button>` : ''}
     `
 
     div.querySelectorAll('.pc-retainer-tier').forEach((el) => {
@@ -517,15 +524,15 @@ function initCalculator(root) {
     const retainerUSD = getRetainerUSD()
 
     if (state.priceRevealed) {
-      fromLabel.textContent = 'FROM'
+      fromLabel.textContent = t('priceFromLabel')
       grandTotalEl.textContent = fmtCurrency(projectUSD)
       grandTotalEl.classList.remove('is-pending')
-      totalMetaEl.textContent = `${state.currency}, project total (indicative)`
+      totalMetaEl.textContent = `${state.currency}, ${t('priceRevealedMeta')}`
     } else {
       fromLabel.textContent = ''
       grandTotalEl.textContent = '$ —'
       grandTotalEl.classList.add('is-pending')
-      totalMetaEl.textContent = 'Click Calculate to reveal pricing'
+      totalMetaEl.textContent = t('pricePendingMeta')
     }
 
     // Build breakdown
@@ -551,7 +558,7 @@ function initCalculator(root) {
 
     let html = ''
     if (items.length === 0) {
-      html = `<div class="pc-breakdown-row is-empty"><span class="pc-label">No components selected yet</span><span class="pc-value">—</span></div>`
+      html = `<div class="pc-breakdown-row is-empty"><span class="pc-label">${escape(t('priceEmpty'))}</span><span class="pc-value">—</span></div>`
     } else {
       html = items
         .map(
@@ -568,8 +575,8 @@ function initCalculator(root) {
     html += `
       <hr class="pc-breakdown-divider">
       <div class="pc-breakdown-row is-subtotal">
-        <span class="pc-label">Project subtotal</span>
-        <span class="pc-value">${state.priceRevealed ? 'From ' + fmtCurrency(projectUSD) : '—'}</span>
+        <span class="pc-label">${escape(t('priceSubtotal'))}</span>
+        <span class="pc-value">${state.priceRevealed ? t('labelFrom') + ' ' + fmtCurrency(projectUSD) : '—'}</span>
       </div>
     `
 
@@ -580,10 +587,10 @@ function initCalculator(root) {
       html += `
         <div class="pc-breakdown-row is-retainer" style="margin-top:0.875rem;">
           <span class="pc-label">Retainer · ${escape(tier.name)}</span>
-          <span class="pc-value">${state.priceRevealed ? fmtCurrency(retainerUSD) + ' / mo' : '—'}</span>
+          <span class="pc-value">${state.priceRevealed ? fmtCurrency(retainerUSD) + ' ' + t('pricePerMonthSuffix') : '—'}</span>
         </div>
         <div class="pc-breakdown-row is-retainer">
-          <span class="pc-label" style="color:var(--pc-muted-dim); font-size:0.75rem;">First quarter commitment</span>
+          <span class="pc-label" style="color:var(--pc-muted-dim); font-size:0.75rem;">${escape(t('priceFirstQuarter'))}</span>
           <span class="pc-value" style="color:var(--pc-muted); font-weight:600;">${state.priceRevealed ? fmtCurrency(retainerUSD * 3) : '—'}</span>
         </div>
       `
@@ -592,11 +599,11 @@ function initCalculator(root) {
     breakdownList.innerHTML = html
 
     if (state.priceRevealed) {
-      ctaPrimary.textContent = 'Book a discovery call'
+      ctaPrimary.textContent = t('ctaBook')
       ctaPrimary.dataset.action = 'book'
       ctaPdf.style.display = 'block'
     } else {
-      ctaPrimary.textContent = 'Calculate my engagement'
+      ctaPrimary.textContent = t('ctaCalculate')
       ctaPrimary.dataset.action = 'calculate'
       ctaPdf.style.display = 'none'
     }
@@ -843,7 +850,7 @@ function initCalculator(root) {
           'Could not submit. Please try again or email us directly.'
         modalSubmitError.classList.add('is-shown')
         modalSubmitBtn.disabled = false
-        modalSubmitBtn.textContent = 'Reveal my estimate'
+        modalSubmitBtn.textContent = t('modalSubmit')
         return
       }
       state.contact = contact
@@ -851,14 +858,14 @@ function initCalculator(root) {
       closeModal()
       renderAll()
       modalSubmitBtn.disabled = false
-      modalSubmitBtn.textContent = 'Reveal my estimate'
+      modalSubmitBtn.textContent = t('modalSubmit')
     } catch (err) {
       console.error('Submission failed:', err)
       modalSubmitError.textContent =
         'Network error. Please check your connection and try again.'
       modalSubmitError.classList.add('is-shown')
       modalSubmitBtn.disabled = false
-      modalSubmitBtn.textContent = 'Reveal my estimate'
+      modalSubmitBtn.textContent = t('modalSubmit')
     }
   }
 
@@ -1086,7 +1093,7 @@ function initCalculator(root) {
       alert('Could not generate PDF. Please try again or contact us directly.')
     } finally {
       ctaPdf.disabled = false
-      ctaPdf.textContent = 'Download estimate (PDF)'
+      ctaPdf.textContent = t('ctaPdf')
       state.pdfLoading = false
     }
   }
