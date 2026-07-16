@@ -78,38 +78,59 @@ function initCalculator(root) {
   }
   const calcComponentUSD = (c) => calcComponentHours(c) * CONFIG.hourlyRate
 
+  // Rate-card base fee: piecewise-linear between tier anchors, floor below
+  // the first anchor. Returns null above the top anchor (bespoke).
+  const migrationBaseUSD = (qty) => {
+    const tiers = CONFIG.migration.tiers
+    if (qty <= 0) return 0
+    const first = tiers[0]
+    if (qty <= first.qty) {
+      return Math.max(
+        qty * (first.totalUSD / first.qty),
+        CONFIG.migration.floorUSD
+      )
+    }
+    if (qty > tiers[tiers.length - 1].qty) return null
+    for (let i = 1; i < tiers.length; i++) {
+      const a = tiers[i - 1]
+      const b = tiers[i]
+      if (qty > a.qty && qty <= b.qty) {
+        const pct = (qty - a.qty) / (b.qty - a.qty)
+        return a.totalUSD + pct * (b.totalUSD - a.totalUSD)
+      }
+    }
+    return null
+  }
+
+  const migrationPlatformDef = () =>
+    MIGRATION_PLATFORMS[state.migration.sourcePlatform] ||
+    MIGRATION_PLATFORMS['Other']
+
+  // A platform is on the standard rate card if it says standard:true — or,
+  // for a stale Webflow data block still using the legacy multiplier schema,
+  // if its surcharge multiplier was 0.
+  const isStandardPlatform = (def) =>
+    def.standard === true ||
+    (def.standard === undefined && def.multiplier === 0)
+
+  const isMigrationBespoke = () => {
+    if (!state.migrationEnabled) return false
+    if (!isStandardPlatform(migrationPlatformDef())) return true
+    return migrationBaseUSD(state.migration.ticketVolume) === null
+  }
+
+  // Delivered platform fee: (base × delta allowance) + management fee.
+  // Returns null when the quote is bespoke (non-standard source or above
+  // the top tier) — never auto-price those.
   const calcMigrationUSD = () => {
     if (!state.migrationEnabled) return 0
-    const qty = state.migration.ticketVolume
-    const tiers = CONFIG.migration.tiers
-    let subtotal
-
-    if (qty <= 0) {
-      subtotal = 0
-    } else if (qty < tiers[0].qty) {
-      subtotal = qty * tiers[0].perTicket
-    } else {
-      let i = 0
-      for (let k = 0; k < tiers.length; k++) {
-        if (tiers[k].qty <= qty) i = k
-      }
-      const base = tiers[i].totalUSD
-      const surplus = qty - tiers[i].qty
-      const nextRate =
-        i + 1 < tiers.length ? tiers[i + 1].perTicket : tiers[i].perTicket
-      subtotal = base + surplus * nextRate
-    }
-
-    const platDef =
-      MIGRATION_PLATFORMS[state.migration.sourcePlatform] ||
-      MIGRATION_PLATFORMS['Other']
-    const surcharge = CONFIG.migration.surchargeBaseUSD * platDef.multiplier
-    let total = subtotal + surcharge
-
-    if (qty > 0 && total < CONFIG.migration.minPriceUSD) {
-      total = CONFIG.migration.minPriceUSD
-    }
-    return total
+    if (isMigrationBespoke()) return null
+    const base = migrationBaseUSD(state.migration.ticketVolume)
+    if (base === 0) return 0
+    return Math.round(
+      base * CONFIG.migration.deltaMultiplier +
+        CONFIG.migration.managementFeeUSD
+    )
   }
 
   const getRetainerUSD = () => {
@@ -120,7 +141,7 @@ function initCalculator(root) {
 
   const calcProjectSubtotalUSD = () => {
     let total = COMPONENTS.reduce((sum, c) => sum + calcComponentUSD(c), 0)
-    total += calcMigrationUSD()
+    total += calcMigrationUSD() || 0 // bespoke migration (null) adds nothing
     return total
   }
 
@@ -149,9 +170,16 @@ function initCalculator(root) {
   const COPY = { ...CONFIG.copy, ...(window.SABEL_CALCULATOR_COPY || {}) }
   const t = (key) => COPY[key] ?? CONFIG.copy[key] ?? ''
 
-  // Supported platforms list (qualifier) — the non-fallback platforms.
+  // Supported platforms list (qualifier) — standard rate-card platforms only.
   const supportedHtml = Object.keys(MIGRATION_PLATFORMS)
-    .filter((k) => !MIGRATION_PLATFORMS[k].fallback)
+    .filter((k) => {
+      const def = MIGRATION_PLATFORMS[k]
+      return (
+        !def.fallback &&
+        (def.standard === true ||
+          (def.standard === undefined && def.multiplier === 0))
+      )
+    })
     .map((n) => `<span class="pc-platform-name">${escape(n)}</span>`)
     .join('<span class="pc-platform-sep">·</span>')
 
@@ -409,13 +437,16 @@ function initCalculator(root) {
     const div = document.createElement('div')
     div.className = 'pc-component is-active'
     const usd = calcMigrationUSD()
+    const bespoke = isMigrationBespoke()
     const platformOpts = Object.keys(MIGRATION_PLATFORMS).filter(
       (k) => !MIGRATION_PLATFORMS[k].fallback
     )
-    const priceLabel = state.priceRevealed
-      ? fmtCurrency(usd)
-      : t('compCalculating')
-    const fromText = state.priceRevealed ? t('labelFrom') + ' ' : ''
+    const priceLabel = bespoke
+      ? t('labelBespoke')
+      : state.priceRevealed
+        ? fmtCurrency(usd)
+        : t('compCalculating')
+    const fromText = state.priceRevealed && !bespoke ? t('labelFrom') + ' ' : ''
 
     div.innerHTML = `
       <div class="pc-comp-head">
@@ -426,6 +457,7 @@ function initCalculator(root) {
             <span class="pc-tag">${escape(t('migrationCardTag'))}</span>
           </div>
           <p class="pc-comp-desc">${escape(t('migrationCardDesc'))}</p>
+          ${bespoke ? `<p class="pc-comp-desc" data-pc="mig-bespoke-note">${escape(t('migrationBespokeNote'))}</p>` : ''}
         </div>
         <div class="pc-comp-price-block">
           <div class="pc-comp-price"><span class="pc-from">${escape(fromText)}</span>${escape(priceLabel)}</div>
@@ -470,11 +502,18 @@ function initCalculator(root) {
         fmtNumber(state.migration.ticketVolume) +
         ' ' +
         t('migrationTicketsSuffix')
-      if (state.priceRevealed) {
+      if (isMigrationBespoke()) {
+        priceEl.innerHTML = escape(t('labelBespoke'))
+      } else if (state.priceRevealed) {
         priceEl.innerHTML = `<span class="pc-from">${escape(t('labelFrom'))} </span>${fmtCurrency(calcMigrationUSD())}`
+      } else {
+        priceEl.innerHTML = escape(t('compCalculating'))
       }
       renderPricePanel()
     })
+    // Full re-render once the drag ends so bespoke state (note, price label)
+    // settles correctly after crossing the top-tier boundary.
+    slider.addEventListener('change', () => renderAll())
 
     return div
   }
@@ -558,7 +597,11 @@ function initCalculator(root) {
     if (state.migrationEnabled) {
       items.push({
         label: `Migration (${fmtNumber(state.migration.ticketVolume)}, ${state.migration.sourcePlatform})`,
-        value: state.priceRevealed ? fmtCurrency(calcMigrationUSD()) : '—',
+        value: isMigrationBespoke()
+          ? t('labelBespoke')
+          : state.priceRevealed
+            ? fmtCurrency(calcMigrationUSD())
+            : '—',
       })
     }
 
@@ -769,16 +812,13 @@ function initCalculator(root) {
     let migration = null
     if (state.migrationEnabled) {
       const migUSD = calcMigrationUSD()
-      const platDef =
-        MIGRATION_PLATFORMS[state.migration.sourcePlatform] ||
-        MIGRATION_PLATFORMS['Other']
-      const surcharge = CONFIG.migration.surchargeBaseUSD * platDef.multiplier
+      const bespoke = isMigrationBespoke()
       migration = {
         sourcePlatform: state.migration.sourcePlatform,
         ticketVolume: state.migration.ticketVolume,
-        surchargeUSD: Math.round(surcharge),
-        priceUSD: Math.round(migUSD),
-        priceClient: Math.round(migUSD * fxRate),
+        bespoke,
+        priceUSD: bespoke ? null : Math.round(migUSD),
+        priceClient: bespoke ? null : Math.round(migUSD * fxRate),
       }
     }
 
@@ -1016,7 +1056,12 @@ function initCalculator(root) {
         doc.setFontSize(11)
         doc.setTextColor(...DARK)
         doc.text('Migration', M, y)
-        doc.text(fmtCurrency(usd), W - M, y, { align: 'right' })
+        doc.text(
+          isMigrationBespoke() ? t('labelBespoke') : fmtCurrency(usd),
+          W - M,
+          y,
+          { align: 'right' }
+        )
         y += 14
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(9)
