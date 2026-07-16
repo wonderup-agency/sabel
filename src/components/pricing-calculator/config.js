@@ -3,15 +3,17 @@
 // No need to touch the calculator logic in index.js.
 
 export const CONFIG = {
-  // Hourly rate (USD) used for component pricing
-  hourlyRate: 200,
+  // Hourly rate (USD) used for component pricing — Sabel rate card
+  hourlyRate: 235,
 
-  // FX rates (multiplier from USD)
+  // FX rates (multiplier from USD). Derived from the rate card per-currency
+  // hourly rates (USD 235 / AUD 350 / EUR 215 / GBP 175) so converted
+  // component prices match the card exactly.
   fx: {
     USD: 1.0,
-    AUD: 1.3944,
-    EUR: 0.85,
-    GBP: 0.7,
+    AUD: 1.4894,
+    EUR: 0.9149,
+    GBP: 0.7447,
   },
   currencySymbol: { USD: '$', AUD: '$', EUR: '€', GBP: '£' },
 
@@ -111,30 +113,42 @@ export const CONFIG = {
   ],
 
   // Migration (only renders when user ticks "Migration required")
+  //
+  // Canonical Migr8Now model (single source of truth: the migr8now-pricing
+  // calculator). Delivered fee = (rate-card base × deltaMultiplier)
+  // + managementFeeUSD. The base is piecewise-linear between tier anchors
+  // with a floor below the first anchor. Above the last anchor, or from a
+  // non-standard source platform, there is NO auto-quote — the calculator
+  // shows a bespoke prompt instead of a price.
   migration: {
     learnMore: '/services/migration-accelerator',
-    minPriceUSD: 500,
+    floorUSD: 1000,
+    deltaMultiplier: 1.1,
+    managementFeeUSD: 1000,
 
-    // Cumulative tier model. Tier order MUST be ascending by qty.
+    // Piecewise-linear anchor points. Tier order MUST be ascending by qty.
     tiers: [
-      { qty: 50000, totalUSD: 1053, perTicket: 0.0210609 },
-      { qty: 100000, totalUSD: 1781, perTicket: 0.0178146 },
-      { qty: 500000, totalUSD: 3317, perTicket: 0.006633 },
-      { qty: 750000, totalUSD: 4050, perTicket: 0.0053998 },
-      { qty: 1000000, totalUSD: 5254, perTicket: 0.0052542 },
+      { qty: 50000, totalUSD: 1053 },
+      { qty: 100000, totalUSD: 1781 },
+      { qty: 500000, totalUSD: 3317 },
+      { qty: 750000, totalUSD: 4050 },
+      { qty: 1000000, totalUSD: 5254 },
     ],
 
-    // Per-platform surcharge multipliers (multiply against base unit below)
-    surchargeBaseUSD: 1500,
+    // standard:true = on the rate card, auto-quoted. standard:false platforms
+    // stay in the dropdown but show a bespoke prompt instead of a price.
+    // fallback:true marks the catch-all (hidden from the dropdown, used when
+    // a selected platform is not found).
     platforms: {
-      Zendesk: { multiplier: 0.0, fallback: false },
-      Freshdesk: { multiplier: 0.0, fallback: false },
-      'Help Scout': { multiplier: 0.0, fallback: false },
-      Intercom: { multiplier: 0.0, fallback: false },
-      LiveChat: { multiplier: 1.5, fallback: false },
-      'Zoho Desk': { multiplier: 1.5, fallback: false },
-      'Salesforce Service Cloud': { multiplier: 2.0, fallback: false },
-      Other: { multiplier: 1.5, fallback: true },
+      Zendesk: { standard: true, fallback: false },
+      Freshdesk: { standard: true, fallback: false },
+      'Help Scout': { standard: true, fallback: false },
+      Intercom: { standard: true, fallback: false },
+      Gorgias: { standard: true, fallback: false },
+      LiveChat: { standard: false, fallback: false },
+      'Zoho Desk': { standard: false, fallback: false },
+      'Salesforce Service Cloud': { standard: false, fallback: false },
+      Other: { standard: false, fallback: true },
     },
   },
 
@@ -259,6 +273,9 @@ export const CONFIG = {
 
     compNotAdded: 'Not added',
     compCalculating: 'Calculating',
+    labelBespoke: 'Bespoke quote',
+    migrationBespokeNote:
+      'This migration needs a custom quote. Book a call and we will price it with you.',
     compAdd: 'Add to your engagement',
     compIncluded: 'Included in your engagement',
     labelFrom: 'From',
